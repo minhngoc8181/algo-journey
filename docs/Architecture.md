@@ -1,8 +1,8 @@
 # Architecture.md
 ## algo-journey — Product and System Architecture
 
-Version: 1.1  
-Status: Updated to reflect product vision  
+Version: 1.2  
+Status: Partially implemented — M0/M1/M2 complete, M3/M4 in progress  
 Repository: `algo-journey`
 
 ---
@@ -196,11 +196,32 @@ Optional V1 local data if cheap to add:
 
 V1 uses an open-source browser-first stack:
 
-- **Monaco Editor** — code editor
-- **Tree-sitter + tree-sitter-java** — fast syntax parsing and structural checks
-- **teavm-javac** — compile Java source in the browser
-- **TeaVM** — generate browser-runnable output
-- **Web Workers** — isolate compile and run stages from the UI thread
+- **Vite** — build tool with HMR and TypeScript-first configuration
+- **TypeScript (strict mode)** — application source language
+- **Monaco Editor** — code editor ✅ *implemented*
+- **Tree-sitter + tree-sitter-java** — fast syntax parsing and structural checks *(planned — currently using regex-based validation)*
+- **teavm-javac** — compile Java source in the browser *(planned — currently using mock compiler)*
+- **TeaVM** — generate browser-runnable output *(planned)*
+- **Web Workers** — isolate compile and run stages from the UI thread *(planned — architecture ready)*
+- **IndexedDB + localStorage** — local progress and draft persistence ✅ *implemented*
+
+### 6.1 Current implementation status
+
+| Component | Status | Notes |
+|---|---|---|
+| Vite + TypeScript | ✅ Built | Strict mode, zero errors |
+| Monaco Editor | ✅ Built | Java syntax, theme sync, auto-layout |
+| Exercise Loader | ✅ Built | JSON-based, filter by topic/difficulty/search |
+| Progress Store | ✅ Built | IndexedDB for progress + drafts, localStorage for recent/theme |
+| Run Orchestrator | ✅ Built | Mock compiler with structural checks |
+| Catalog UI | ✅ Built | Problem cards, filters, stats bar, animations |
+| Problem Detail UI | ✅ Built | Split layout, examples, constraints |
+| Result Panel | ✅ Built | Test cases, compile errors, status summary |
+| Dark/Light Theme | ✅ Built | Persisted toggle with full token system |
+| Tree-sitter Parser | 🔲 Planned | Currently regex-based class/method validation |
+| teavm-javac Compiler | 🔲 Planned | Currently mock compiler |
+| TeaVM Runtime | 🔲 Planned | Currently mock runner |
+| Web Worker Pipeline | 🔲 Planned | Architecture designed, not yet implemented |
 
 This direction was chosen because it supports the product goals well:
 
@@ -592,7 +613,56 @@ To support outside contributors, the architecture should favor:
 
 ---
 
-## 17. Recommended repository shape
+## 17. Current repository shape
+
+The V1 implementation uses a flat `src/` layout for development speed. Package extraction into `packages/` is planned for M4.
+
+```text
+algo-journey/
+├─ index.html                    # Entry point
+├─ vite.config.ts                # Build configuration
+├─ tsconfig.json                 # TypeScript strict config
+├─ package.json
+│
+├─ src/
+│  ├─ main.ts                    # Bootstrap
+│  ├─ app/                       # Config, routing
+│  │  ├─ config.ts
+│  │  └─ router.ts
+│  ├─ shared/                    # Cross-module types, events, DOM utils
+│  │  ├─ types.ts
+│  │  ├─ events.ts
+│  │  └─ dom-utils.ts
+│  ├─ content/                   # Exercise data (JSON-like TypeScript)
+│  │  ├─ catalog-data.ts
+│  │  └─ exercise-registry.ts
+│  ├─ exercise-engine/           # Exercise loading and filtering
+│  │  └─ exercise-loader.ts
+│  ├─ runner/                    # Execution pipeline (currently mock)
+│  │  └─ mock-runner.ts
+│  ├─ progress/                  # IndexedDB persistence
+│  │  └─ progress-store.ts
+│  ├─ ui/                        # Vanilla DOM components
+│  │  ├─ app-shell.ts
+│  │  └─ pages/
+│  │     ├─ catalog-page.ts
+│  │     └─ problem-page.ts
+│  └─ styles/                    # Vanilla CSS design system
+│     ├─ reset.css
+│     ├─ variables.css
+│     ├─ app.css
+│     ├─ layout.css
+│     ├─ catalog.css
+│     └─ problem.css
+│
+└─ docs/
+   ├─ Architecture.md
+   ├─ ExerciseSchema.md
+   ├─ Tasks.md
+   └─ Agent_Project_Bootstrap_Prompt.md
+```
+
+### 17.1 Future repository shape (M4+)
 
 ```text
 algo-journey/
@@ -609,9 +679,6 @@ algo-journey/
 │  ├─ progress-store/
 │  └─ shared/
 ├─ docs/
-│  ├─ product/
-│  ├─ architecture/
-│  └─ implementation/
 └─ README.md
 ```
 

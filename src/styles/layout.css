@@ -85,10 +85,10 @@
   color: var(--color-text-secondary);
 }
 
-/* ── Split Layout (Problem Page) ── */
+/* ══ Split Layout (Problem Page) ══ */
 .split-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 50fr 5px 50fr;
   gap: 0;
   height: calc(100vh - var(--header-height));
   overflow: hidden;
@@ -97,14 +97,49 @@
 .split-layout__left {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--color-border-subtle);
   overflow: hidden;
+  min-width: 0;
 }
 
 .split-layout__right {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
+}
+
+/* ══ Resizer ══ */
+.split-resizer {
+  position: relative;
+  width: 5px;
+  cursor: col-resize;
+  background: var(--color-border-subtle);
+  flex-shrink: 0;
+  transition: background var(--transition-fast);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.split-resizer:hover,
+.split-resizer--dragging {
+  background: var(--color-accent);
+}
+
+.split-resizer__handle {
+  width: 3px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: background var(--transition-fast);
+  pointer-events: none;
+}
+
+.split-resizer:hover .split-resizer__handle,
+.split-resizer--dragging .split-resizer__handle {
+  background: white;
+  opacity: 0.7;
 }
 
 /* ── Panel ── */
@@ -171,15 +206,21 @@
   border-bottom-color: var(--color-accent);
 }
 
-/* ── Responsive ── */
+/* ══ Responsive ══ */
 @media (max-width: 768px) {
   .app-main {
     padding: var(--space-4);
   }
 
   .split-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 5px auto;
+  }
+
+  .split-resizer {
+    width: auto;
+    height: 5px;
+    cursor: row-resize;
   }
 
   .split-layout__left {

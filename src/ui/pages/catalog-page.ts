@@ -8,8 +8,13 @@ import { progressStore } from '../../progress/progress-store';
 import { router } from '../../app/router';
 import type { CatalogEntry, Topic, Difficulty, ProgressStatus } from '../../shared/types';
 
+// Active tag filter state (module-level so it persists across re-renders)
+let activeTagFilter: string | null = null;
+
 export async function renderCatalogPage(container: HTMLElement): Promise<void> {
   container.className = 'app-main';
+  // Reset tag filter when navigating to catalog
+  activeTagFilter = null;
 
   const pageHeader = createPageHeader();
   const statsBar = await createStatsBar();
@@ -25,7 +30,7 @@ function createPageHeader(): HTMLElement {
   const title = el('h1', { className: 'page-title', text: 'Problems' });
   const subtitle = el('p', {
     className: 'page-subtitle',
-    text: 'Practice programming exercises with instant feedback',
+    text: 'Practice Java exercises and track your progress',
   });
   return el('div', {
     className: 'page-header animate-fade-in',
@@ -107,9 +112,32 @@ function createFilterBar(): HTMLElement {
   topicSelect.addEventListener('change', handleFilter);
   diffSelect.addEventListener('change', handleFilter);
 
+  // Active tag chip (hidden until a tag is clicked)
+  const tagClearBtn = el('button', {
+    className: 'tag-filter__clear',
+    attrs: { 'aria-label': 'Clear tag filter', title: 'Remove tag filter' },
+    text: '\u00d7',
+    on: {
+      click: () => {
+        activeTagFilter = null;
+        const grid = document.getElementById('problem-grid');
+        if (grid) renderProblemList(grid);
+      },
+    },
+  });
+  const tagChip = el('div', {
+    className: 'tag-filter__chip',
+    id: 'active-tag-filter',
+    children: [
+      el('span', { className: 'tag-filter__label', text: '' }),
+      tagClearBtn,
+    ],
+  });
+  tagChip.style.display = 'none';
+
   return el('div', {
     className: 'filter-bar animate-fade-in',
-    children: [searchWrapper, topicSelect, diffSelect],
+    children: [searchWrapper, topicSelect, diffSelect, tagChip],
   });
 }
 
@@ -117,11 +145,24 @@ async function renderProblemList(grid: HTMLElement): Promise<void> {
   const searchEl = document.getElementById('filter-search') as HTMLInputElement | null;
   const topicEl = document.getElementById('filter-topic') as HTMLSelectElement | null;
   const diffEl = document.getElementById('filter-difficulty') as HTMLSelectElement | null;
+  const tagFilterEl = document.getElementById('active-tag-filter');
+
+  // Show/hide active tag filter chip
+  if (tagFilterEl) {
+    if (activeTagFilter) {
+      tagFilterEl.style.display = 'flex';
+      const label = tagFilterEl.querySelector('.tag-filter__label');
+      if (label) label.textContent = `Tag: ${activeTagFilter}`;
+    } else {
+      tagFilterEl.style.display = 'none';
+    }
+  }
 
   const entries = exerciseLoader.filterCatalog({
     search: searchEl?.value,
     topic: (topicEl?.value as Topic | 'all') ?? 'all',
     difficulty: (diffEl?.value as Difficulty | 'all') ?? 'all',
+    tag: activeTagFilter ?? undefined,
   });
 
   grid.innerHTML = '';
@@ -149,14 +190,14 @@ function createProblemCard(entry: CatalogEntry, status: ProgressStatus, index: n
   if (status === 'accepted') {
     statusEl.appendChild(svgIcon(icons.check, 14));
   } else if (status === 'attempted') {
-    statusEl.textContent = '…';
+    statusEl.textContent = '\u2026';
   }
 
   // Info
   const title = el('span', { className: 'problem-card__title', text: entry.title });
   const meta = el('div', { className: 'problem-card__meta', children: [
     el('span', { className: 'problem-card__topic', text: capitalize(entry.topic) }),
-    el('span', { text: '•' }),
+    el('span', { text: '\u2022' }),
     el('span', { text: `~${entry.estimatedMinutes} min` }),
   ]});
   const info = el('div', { className: 'problem-card__info', children: [title, meta] });
@@ -167,10 +208,24 @@ function createProblemCard(entry: CatalogEntry, status: ProgressStatus, index: n
     text: capitalize(entry.difficulty),
   });
 
-  // Tags
+  // Tags — clickable for filtering
   const tagsEl = el('div', { className: 'problem-card__tags' });
   for (const tag of entry.tags.slice(0, 2)) {
-    tagsEl.appendChild(el('span', { className: 'tag', text: tag }));
+    const isActive = activeTagFilter === tag;
+    const tagEl = el('span', {
+      className: `tag tag--clickable${isActive ? ' tag--active' : ''}`,
+      text: tag,
+      attrs: { title: `Filter by tag: ${tag}` },
+      on: {
+        click: (e: Event) => {
+          e.stopPropagation(); // prevent card navigation
+          activeTagFilter = activeTagFilter === tag ? null : tag;
+          const grid = document.getElementById('problem-grid');
+          if (grid) renderProblemList(grid);
+        },
+      },
+    });
+    tagsEl.appendChild(tagEl);
   }
 
   const card = el('div', {

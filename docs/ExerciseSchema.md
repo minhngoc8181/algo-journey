@@ -1,8 +1,8 @@
 # ExerciseSchema.md
 ## algo-journey — Exercise definition, metadata, and evaluation contract
 
-Version: 1.1  
-Status: Authoring-ready  
+Version: 1.2  
+Status: Implemented — 15 exercises authored, schema validated  
 Repository: `algo-journey`
 
 ---
@@ -581,15 +581,39 @@ Before adding a new exercise, confirm:
 
 ---
 
-## 17. Future schema extensions
+## 17. Current implementation status
 
-Possible later additions:
+### 17.1 Exercises authored
 
-- editorial or hint blocks
-- localized statements
-- richer scoring
-- partial credit
-- teacher-only notes
-- cloud-synced attempts
+| Topic | Count | Difficulty |
+|---|---|---|
+| arrays | 5 | easy |
+| strings | 2 | easy |
+| loops | 2 | easy |
+| conditionals | 1 | easy |
+| recursion | 2 | easy |
+| searching | 1 | medium |
+| sorting | 1 | medium |
+| classes | 1 | easy |
+| **Total** | **15** | |
 
-These should be added carefully without breaking current content.
+### 17.2 Modes implemented
+
+- `function_implementation` — ✅ Fully supported (primary mode)
+- `class_implementation` — ✅ Schema supported, 1 exercise authored
+- `main_program` — 🔲 Schema ready, no exercises authored yet
+
+### 17.3 Comparators implemented
+
+- `exact_json` — ✅ Used by most exercises
+- `unordered_json` — ✅ Used by Two Sum
+- `exact_text` — 🔲 Planned
+- `trimmed_text` — 🔲 Planned
+- `numeric_tolerance` — 🔲 Planned
+- `custom_named_comparator` — 🔲 Planned
+
+### 17.4 Data format
+
+Exercises are currently defined as TypeScript objects in `src/content/exercise-registry.ts` and `src/content/catalog-data.ts`. The schema matches the JSON spec in this document. Migration to standalone `.json` files is planned for M4.
+
+Future schema extensions should be added carefully without breaking current content.

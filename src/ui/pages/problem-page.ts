@@ -12,6 +12,9 @@ import type { Exercise, RunResult, TestResult } from '../../shared/types';
 // Monaco editor instance reference
 let editorInstance: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
 
+const SPLIT_RATIO_KEY = 'algopath:split-ratio';
+const DEFAULT_SPLIT = 50; // percent for left panel
+
 export async function renderProblemPage(container: HTMLElement, slug: string): Promise<void> {
   container.className = 'app-main app-main--full';
 
@@ -35,21 +38,105 @@ export async function renderProblemPage(container: HTMLElement, slug: string): P
   const starterCode = draft?.files[exercise.editableFiles[0]?.path ?? ''] ?? exercise.editableFiles[0]?.starter ?? '';
 
   // Build layout
-  const layout = el('div', { className: 'split-layout' });
+  const layout = el('div', { className: 'split-layout', id: 'split-layout' });
 
   // ── Left Panel: Problem Statement ──
   const leftPanel = createStatementPanel(exercise);
+  leftPanel.id = 'split-left';
+
+  // ── Draggable Resizer ──
+  const resizer = el('div', { className: 'split-resizer', id: 'split-resizer', attrs: { 'aria-label': 'Drag to resize panels' } });
+  resizer.appendChild(el('div', { className: 'split-resizer__handle' }));
 
   // ── Right Panel: Editor + Results ──
   const rightPanel = createEditorPanel(exercise, starterCode);
+  rightPanel.id = 'split-right';
 
   layout.appendChild(leftPanel);
+  layout.appendChild(resizer);
   layout.appendChild(rightPanel);
 
   render(container, layout);
 
+  // Restore saved ratio
+  const savedRatio = Number(localStorage.getItem(SPLIT_RATIO_KEY)) || DEFAULT_SPLIT;
+  applySplitRatio(layout, savedRatio);
+
+  // Wire up drag-to-resize
+  initSplitResizer(layout, resizer);
+
   // Initialize Monaco editor after DOM is ready
   setTimeout(() => initMonacoEditor(exercise, starterCode), 50);
+}
+
+/** Apply a left-panel percentage to the split layout */
+function applySplitRatio(layout: HTMLElement, leftPct: number): void {
+  const clamped = Math.min(80, Math.max(20, leftPct));
+  const rightPct = 100 - clamped;
+  layout.style.gridTemplateColumns = `${clamped}fr 5px ${rightPct}fr`;
+}
+
+/** Wire up mouse drag resizing on the split resizer handle */
+function initSplitResizer(layout: HTMLElement, resizer: HTMLElement): void {
+  let dragging = false;
+
+  resizer.addEventListener('mousedown', (e: MouseEvent) => {
+    dragging = true;
+    resizer.classList.add('split-resizer--dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e: MouseEvent) => {
+    if (!dragging) return;
+    const rect = layout.getBoundingClientRect();
+    const offset = e.clientX - rect.left;
+    const pct = (offset / rect.width) * 100;
+    applySplitRatio(layout, pct);
+    // Also trigger Monaco layout update
+    editorInstance?.layout();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove('split-resizer--dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    // Save ratio
+    const cols = layout.style.gridTemplateColumns;
+    const match = cols.match(/^([\d.]+)fr/);
+    if (match) {
+      localStorage.setItem(SPLIT_RATIO_KEY, match[1]!);
+    }
+  });
+
+  // Touch support
+  resizer.addEventListener('touchstart', (e: TouchEvent) => {
+    dragging = true;
+    resizer.classList.add('split-resizer--dragging');
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', (e: TouchEvent) => {
+    if (!dragging) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = layout.getBoundingClientRect();
+    const pct = ((touch.clientX - rect.left) / rect.width) * 100;
+    applySplitRatio(layout, pct);
+    editorInstance?.layout();
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove('split-resizer--dragging');
+    const cols = layout.style.gridTemplateColumns;
+    const match = cols.match(/^([\d.]+)fr/);
+    if (match) localStorage.setItem(SPLIT_RATIO_KEY, match[1]!);
+  });
 }
 
 function createStatementPanel(exercise: Exercise): HTMLElement {

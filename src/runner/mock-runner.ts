@@ -1,9 +1,11 @@
 /* ═══════════════════════════════════════════════════════════
    Mock Runner — Simulates compile + run for development
-   Will be replaced with real teavm-javac / TeaVM pipeline
+   Uses structural validator for pre-compile checks.
+   Will be replaced with real teavm-javac / TeaVM pipeline.
    ═══════════════════════════════════════════════════════════ */
 
-import type { Exercise, RunResult, TestResult, CompileDiagnostic } from '../shared/types';
+import type { Exercise, RunResult, TestResult } from '../shared/types';
+import { validateStructure } from '../exercise-engine/structural-validator';
 
 /**
  * Simulate running learner code against exercise test cases.
@@ -12,17 +14,20 @@ import type { Exercise, RunResult, TestResult, CompileDiagnostic } from '../shar
  */
 export async function mockRun(exercise: Exercise, code: string): Promise<RunResult> {
   // Simulate processing delay
-  await delay(400 + Math.random() * 600);
+  await delay(300 + Math.random() * 500);
 
-  // ── Basic compile checks ──
-  const compileErrors = checkBasicSyntax(code, exercise);
-  if (compileErrors.length > 0) {
+  // ── Structural validation (pre-compile) ──
+  const validation = validateStructure(code, exercise);
+  const errors = validation.diagnostics.filter(d => d.severity === 'error');
+  const warnings = validation.diagnostics.filter(d => d.severity === 'warning');
+
+  if (errors.length > 0) {
     return {
       problemId: exercise.id,
       exerciseVersion: exercise.version,
       status: 'compile_error',
       elapsedMs: 0,
-      compileDiagnostics: compileErrors,
+      compileDiagnostics: validation.diagnostics,
       tests: [],
     };
   }
@@ -44,7 +49,6 @@ export async function mockRun(exercise: Exercise, code: string): Promise<RunResu
     testResults.push({
       name: `hidden-${i + 1}`,
       visibility: 'hidden',
-      // If visible tests pass, hidden tests likely pass too (for mock)
       status: allVisiblePassed ? 'passed' : (Math.random() > 0.5 ? 'passed' : 'failed'),
     });
   }
@@ -53,61 +57,20 @@ export async function mockRun(exercise: Exercise, code: string): Promise<RunResu
   const allPassed = testResults.every(t => t.status === 'passed');
   const anyError = testResults.some(t => t.status === 'error');
 
-  return {
+  // Include warnings even on success
+  const result: RunResult = {
     problemId: exercise.id,
     exerciseVersion: exercise.version,
     status: allPassed ? 'accepted' : anyError ? 'runtime_error' : 'wrong_answer',
     elapsedMs,
     tests: testResults,
   };
-}
 
-function checkBasicSyntax(code: string, exercise: Exercise): CompileDiagnostic[] {
-  const errors: CompileDiagnostic[] = [];
-  const file = exercise.editableFiles[0]?.path ?? 'Solution.java';
-
-  // Check for required class
-  if (exercise.requiredStructure?.className) {
-    const className = exercise.requiredStructure.className;
-    if (!code.includes(`class ${className}`)) {
-      errors.push({
-        file,
-        line: 1,
-        column: 1,
-        message: `Required class '${className}' not found`,
-        severity: 'error',
-      });
-    }
+  if (warnings.length > 0) {
+    result.compileDiagnostics = warnings;
   }
 
-  // Check for required method
-  if (exercise.requiredStructure?.methodName) {
-    const methodName = exercise.requiredStructure.methodName;
-    if (!code.includes(methodName)) {
-      errors.push({
-        file,
-        line: 1,
-        column: 1,
-        message: `Required method '${methodName}' not found`,
-        severity: 'error',
-      });
-    }
-  }
-
-  // Check for balanced braces
-  const openBraces = (code.match(/\{/g) || []).length;
-  const closeBraces = (code.match(/\}/g) || []).length;
-  if (openBraces !== closeBraces) {
-    errors.push({
-      file,
-      line: code.split('\n').length,
-      column: 1,
-      message: `Unbalanced braces: ${openBraces} open, ${closeBraces} close`,
-      severity: 'error',
-    });
-  }
-
-  return errors;
+  return result;
 }
 
 function mockEvaluateTest(
@@ -115,11 +78,10 @@ function mockEvaluateTest(
   code: string,
   test: { name: string; args?: unknown[]; expected: unknown },
 ): TestResult {
-  // For mock: check if the starter code was modified
+  // Check if the starter code was modified
   const starterCode = exercise.editableFiles[0]?.starter ?? '';
   const codeModified = code.trim() !== starterCode.trim();
 
-  // If the user hasn't changed the starter code, tests fail
   if (!codeModified) {
     return {
       name: test.name,
@@ -132,14 +94,20 @@ function mockEvaluateTest(
     };
   }
 
-  // For mock purposes, check for some heuristic patterns
-  // In reality, this would be actual JS execution of transpiled code
-  const hasReturnStatement = code.includes('return') && !code.includes('return -1') && !code.includes('return 0') && !code.includes('return false') && !code.includes('return new int[]{-1, -1}') && !code.includes('return new String[0]');
-  const hasLoop = code.includes('for') || code.includes('while');
-  const hasConditional = code.includes('if');
+  // Heuristic: check for meaningful implementation
+  const hasReturnStatement = code.includes('return') &&
+    !code.includes('return -1;') &&
+    !code.includes('return 0;') &&
+    !code.includes('return false;') &&
+    !code.includes('return new int[]{-1, -1};') &&
+    !code.includes('return new String[0];') &&
+    !code.includes('return new int[0];');
 
-  if (hasReturnStatement && (hasLoop || hasConditional)) {
-    // Looks like a real implementation
+  const hasLogic = code.includes('for') || code.includes('while') ||
+    code.includes('if') || code.includes('.') || code.includes('++') ||
+    code.includes('+=');
+
+  if (hasReturnStatement && hasLogic) {
     return {
       name: test.name,
       visibility: 'visible',
@@ -157,7 +125,7 @@ function mockEvaluateTest(
     inputPreview: test.args ? JSON.stringify(test.args) : undefined,
     expectedPreview: JSON.stringify(test.expected),
     actualPreview: '(mock: incomplete implementation detected)',
-    message: 'Implementation appears incomplete',
+    message: 'Implementation appears incomplete — add loops, conditionals, or method calls',
   };
 }
 

@@ -24,6 +24,7 @@ class ExerciseLoader {
     topic?: Topic | 'all';
     difficulty?: Difficulty | 'all';
     search?: string;
+    tag?: string;
   }): CatalogEntry[] {
     let results = [...this.catalog];
 
@@ -33,6 +34,11 @@ class ExerciseLoader {
 
     if (options?.difficulty && options.difficulty !== 'all') {
       results = results.filter(e => e.difficulty === options.difficulty);
+    }
+
+    if (options?.tag) {
+      const tag = options.tag.toLowerCase();
+      results = results.filter(e => e.tags.some(t => t.toLowerCase() === tag));
     }
 
     if (options?.search) {
