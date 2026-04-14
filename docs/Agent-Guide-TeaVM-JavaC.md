@@ -263,3 +263,28 @@ The first implementation is acceptable when all of the following are true:
 Use `teavm-javac` as the real engine.
 
 If something feels difficult, do **not** fall back to writing a fake Java transpiler unless it is explicitly marked as a temporary mock and kept outside the main execution path.
+
+---
+
+## 14. OOP Class Implementations (Lessons Learned)
+
+When implementing complex `class_implementation` exercises (like tracking OOP states or Linked Lists) with heavy stress testing using `javaGenerator`, keep these critical constraints in mind:
+
+1. **WASM Garbage Collection Freezes**: 
+   When running test bounds > 10,000 operations, avoid iterative string concatenation inside the Java WebAssembly environment. For example, doing `actual.toString()` repeatedly on an `ArrayList` with 20,000 strings generates 600k+ String objects. Wasm GC cannot keep up and causes `Time Limit Exceeded (1000ms)`! 
+   *Fix: Calculate pass/fail inside the Wasm pure Java natively using `Math.abs(expected - actual) < 1e-5` or `expected.equals(actual)` and only stringify exactly the mismatching element, never the entire massive queue log.*
+
+2. **Array Stringification Differences (JS vs Java)**: 
+   In `harness-generator.ts`, `String([1, 2])` results in `"1,2"`. However, Java's `List.toString()` outputs `"[1, 2]"`. 
+   *Fix: Always use a custom JS stringifier (`javaStringify`) for the `expected` arrays to ensure arrays and subarrays are wrapped in `[]` so that `Comparator: exact_json` perfectly aligns Java output against JS expectation.*
+
+3. **Double Stringification Differences**:
+   JS stringifies `1.0` as `"1"`. Java's `String.valueOf(1.0)` is `"1.0"`. 
+   *Fix: The harness generator overrides double stringing with `String.valueOf(x).endsWith(".0") ? substring(0, length - 2) : ...` to forcefully clip trailing `.0` in TeaVM before stdout.*
+
+4. **Nested Interfaces Bug (`Map.Entry`)**:
+   Deeply nested interfaces occasionally fail to link natively without heavy explicit class imports in TeaVM minimal mode. E.g., overriding `removeEldestEntry(Map.Entry eldest)` in `LinkedHashMap` throws `cannot find symbol: class Entry`.
+   *Fix: Bypass nested interfaces if possible. For LRU cache tracking, grab `map.keySet().iterator().next()` to manual-find the eldest key and `.remove()` it.*
+
+5. **Inline Template String Escapes**:
+   Beware of Markdown ticks inside JS template literals in `.exercise.ts`. Writing \` \`+\` \` inside a \`\` \` \`\` block halts ESBuild instantly! Always escape them like `\+\` to prevent bundling crashes on the local dev server.
