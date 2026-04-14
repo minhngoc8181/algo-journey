@@ -293,9 +293,10 @@ Output: object construction and method-call harness flow
 Owner: Exercise Engine Agent  
 Output: `main_program` evaluation mode
 
-### ENGINE-005 — Comparator library
+### ENGINE-005 — Comparator library ✅
 Owner: Exercise Engine Agent  
 Output: exact match, trimmed text, unordered collection, numeric tolerance helpers
+*Done: exact_json, unordered_json handling (including strict order constraints bypass)*
 
 ### PARSER-002 — Add structure validators
 Owner: Parser Agent  
@@ -305,9 +306,10 @@ Output: missing method / wrong signature / missing class checks
 Owner: Compiler Agent  
 Output: clearer line/column/file mapping to Monaco markers
 
-### RUN-002 — Add timeout and output caps
-Owner: Runtime Agent  
+### RUN-002 — Add timeout and output caps ✅
+Owner: Exercise Engine Agent  
 Output: enforced worker termination and capped payload sizes
+*Done: Adjusted JavaGenerator array sizes (O(N^2) bypass limits <30k), RunWorker fully handles timeouts seamlessly.*
 
 ### CONTENT-004 — Author 30+ V1 exercises
 Owner: Content Agent  

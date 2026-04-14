@@ -123,11 +123,12 @@ These tools make it possible to support browser-based Java practice without depe
 
 ---
 
-## Repository docs
+## File Structure & Docs
 
-- `Architecture.md` — system architecture and product boundaries
-- `Tasks.md` — implementation phases and tracking
-- `ExerciseSchema.md` — exercise format and evaluation schema
+- `scripts/` — administrative utilities for catalog arrangement and automation
+- `docs/Architecture.md` — system architecture and product boundaries
+- `docs/Tasks.md` — implementation phases and tracking
+- `docs/ExerciseSchema.md` — exercise format and evaluation schema
 
 ---
 

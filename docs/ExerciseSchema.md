@@ -444,8 +444,16 @@ Do not use difficulty as a personal opinion. Use stable content rules.
 If an exercise needs special handling, first check whether it belongs in the schema, comparator registry, or generator library.
 
 ### 13.4 Prefer function mode first
-
 For V1, most algorithm practice should be written as `function_implementation`.
+
+### 13.5 Prevent array state corruption in Generators
+When injecting arrays into learner functions via a `javaGenerator`, always pass cloned arrays: `s.yourMethod(arr.clone())`. If a student uses in-place operations like `Arrays.sort()`, passing the original reference will permanently corrupt the array and break expected validation logic evaluated sequentially afterwards.
+
+### 13.6 Avoid nested interfaces in minimal Classlib
+The TeaVM Java Class Library is condensed. It may struggle parsing deeply nested interface locations like `java.util.Map.Entry` natively during runtime code generation without exhaustive imports. Prefer iterating sets via standard logic: `for (Integer key : map.keySet()) { ... }`.
+
+### 13.7 Adjust JavaGenerator lengths to avoid VM Timeouts
+If the exercise inherently expects an $O(N^2)$ brute-force solution (like Basic Two Sum or Pairs with Sum), strictly cap array bounds to `< 30,000` integers. Generating 100,000 inputs and executing boxed iteration operations locally inside the JS WebAssembly thread easily exceeds the 5-second `RunWorker` watchdog timeline.
 
 ---
 
