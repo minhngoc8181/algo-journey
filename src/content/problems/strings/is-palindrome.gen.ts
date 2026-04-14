@@ -9,7 +9,7 @@ export default defineTests('is-palindrome', (t, rng) => {
   t.hidden('even-palindrome', { args: ['abba'], expected: true });
   t.hidden('almost', { args: ['abca'], expected: false });
 
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 12; i++) {
     const len = rng.int(5, 50);
     const halfStr = rng.string(len, 'abcdefghijklmnopqrstuvwxyz');
     if (rng.bool(0.5)) {

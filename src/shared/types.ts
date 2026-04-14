@@ -74,6 +74,13 @@ export interface ExerciseEvaluation {
   comparator: ComparatorType;
   visibleTests: TestCase[];
   hiddenTestStrategy?: HiddenTestStrategy;
+  /**
+   * Java generator: large tests generated INSIDE Wasm memory.
+   * The Java code runs a seeded RNG, generates inputs, computes
+   * expected via reference logic, runs Solution, then prints AJ| output.
+   * Avoids the 64KB Java bytecode limit from embedding huge array literals.
+   */
+  javaGenerator?: JavaGenerator;
 }
 
 export type ComparatorType =
@@ -98,6 +105,21 @@ export interface HiddenTestStrategy {
   seed?: number;
   count?: number;
   tests?: TestCase[];
+}
+
+/**
+ * Java-side large test generator.
+ * `genMethodBody` is Java code for method body of:
+ *   static void runGeneratedTests(Solution s, java.util.Random rng)
+ * Names should be "gen-0", "gen-1", ..., "gen-{count-1}".
+ * Expected values must be computed inside the Java code (reference impl).
+ */
+export interface JavaGenerator {
+  count: number;          // how many tests (for allTests bookkeeping)
+  seed: number;           // fixed seed for java.util.Random
+  namePrefix: string;     // e.g. "gen-"
+  genMethodBody: string;  // Java method body (see above)  
+  visibility: 'visible' | 'hidden';
 }
 
 // ── Catalog ──

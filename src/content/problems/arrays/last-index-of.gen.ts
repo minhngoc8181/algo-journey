@@ -16,10 +16,12 @@ export default defineTests('last-index-of', (t, rng) => {
   t.hidden('target-cluster-near-end', { args: [[-9, -7, -5, -3, -1, 1, 3, 5, 7, 9, -9, -7, -5, -3, -1, 1, 3, 5, 7, 9, -9, -7, 6, 6, 6, 6, 3, 5], 6], expected: 25 });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 10; i++) {
-    const len = rng.int(10, 5000);
+  for (let i = 0; i < 11; i++) {
+    const isLarge = i >= 9;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const testArr = rng.intArray(len, -100, 100);
-    const tgt = rng.bool(0.7) ? rng.pick(testArr) : rng.int(1000, 2000);
+    // force 1 single absent test to avoid high passing rate with -1
+    const tgt = (i === 1) ? rng.int(1000, 2000) : rng.pick(testArr);
     t.hidden(`gen-${i}`, { args: [testArr, tgt], expected: testArr.lastIndexOf(tgt) });
   }
 });

@@ -14,20 +14,19 @@ export default defineTests('missing-number', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 13; i++) {
-    const n = rng.int(10, 10000);
+    const isLarge = i >= 11;
+    const n = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const missing = rng.int(0, n);
     const testArr: number[] = [];
     for (let val = 0; val <= n; val++) {
-        if (val !== missing) {
-            testArr.push(val);
-        }
+      if (val !== missing) testArr.push(val);
     }
-    // Simple fast shuffle
-    for(let k = testArr.length - 1; k > 0; k--) {
-        const j = rng.int(0, k);
-        const temp = testArr[k]!;
-        testArr[k] = testArr[j]!;
-        testArr[j] = temp;
+    // Fisher-Yates shuffle
+    for (let k = testArr.length - 1; k > 0; k--) {
+      const j = rng.int(0, k);
+      const temp = testArr[k]!;
+      testArr[k] = testArr[j]!;
+      testArr[j] = temp;
     }
     t.hidden(`gen-${i}`, { args: [testArr], expected: missing });
   }

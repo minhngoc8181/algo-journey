@@ -21,16 +21,45 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> rangeSumQueries(List<Integer> numbers, List<List<Integer>> queries) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
+    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> rangeSumQueries(int[] numbers, int[][] queries) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'rangeSumQueries',
-    signature: 'List<Integer> rangeSumQueries(List<Integer> numbers, List<List<Integer>> queries)',
+    signature: 'List<Integer> rangeSumQueries(int[] numbers, int[][] queries)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250439,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2001) - 1000;
+            int qCount = 50 + rng.nextInt(51);
+            int[][] queries = new int[qCount][2];
+            for (int q = 0; q < qCount; q++) {
+                int l = rng.nextInt(len), r = l + rng.nextInt(len - l);
+                queries[q][0] = l; queries[q][1] = r;
+            }
+            // Reference: prefix sum
+            int[] prefix = new int[len + 1];
+            for (int j = 0; j < len; j++) prefix[j+1] = prefix[j] + arr[j];
+            int[] expected = new int[qCount];
+            for (int q = 0; q < qCount; q++) expected[q] = prefix[queries[q][1]+1] - prefix[queries[q][0]];
+            try {
+                java.util.List<Integer> actual = s.rangeSumQueries(arr, queries);
+                boolean pass = actual != null && actual.size() == qCount;
+                if (pass) for (int q = 0; q < qCount; q++) if (actual.get(q) != expected[q]) { pass = false; break; }
+                System.out.println("AJ|stress-" + i + "|" + pass + "|size=" + (actual==null?-1:actual.size()) + "|size=" + qCount);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

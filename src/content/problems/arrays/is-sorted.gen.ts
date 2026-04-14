@@ -16,7 +16,8 @@ export default defineTests('is-sorted', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 11; i++) {
-    const len = rng.int(10, 5000);
+    const isLarge = i >= 9;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const testArr = rng.intArray(len, -1000, 1000);
     
     // Half the time we generate a purely sorted array

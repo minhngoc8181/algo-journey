@@ -15,7 +15,8 @@ export default defineTests('build-prefix-sum', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 12; i++) {
-    const len = rng.int(10, 5000);
+    const isLarge = i >= 10;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const testArr = rng.intArray(len, -500, 500);
     
     const expected = [0];

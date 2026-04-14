@@ -9,5 +9,24 @@ export default defineExercise({
   examples: [{ input: 'arr = [1, 2, 3, 4, 5]', output: '[5, 4, 3, 2, 1]' }],
   starter: { file: 'Solution.java', code: `class Solution {\n    int[] reverseArray(int[] arr) {\n        // Write your code here\n        return arr;\n    }\n}` },
   requiredStructure: { className: 'Solution', methodName: 'reverseArray', signature: 'int[] reverseArray(int[] arr)' },
-  evaluation: { comparator: 'exact_json' },
+  evaluation: { comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250426,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2001) - 1000;
+            int[] expected = new int[len];
+            for (int j = 0; j < len; j++) expected[j] = arr[arr.length - 1 - j];
+            try {
+                int[] actual = s.reverseArray(arr.clone());
+                System.out.println("AJ|stress-" + i + "|" + java.util.Arrays.equals(actual, expected) + "|" + java.util.Arrays.toString(actual) + "|" + java.util.Arrays.toString(expected));
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
+  },
 });

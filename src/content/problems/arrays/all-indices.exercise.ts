@@ -22,16 +22,36 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> allIndicesOfValue(List<Integer> numbers, int target) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
+    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> allIndicesOfValue(int[] numbers, int target) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'allIndicesOfValue',
-    signature: 'List<Integer> allIndicesOfValue(List<Integer> numbers, int target)',
+    signature: 'List<Integer> allIndicesOfValue(int[] numbers, int target)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250438,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(200);
+            int target = arr[rng.nextInt(len)];
+            java.util.ArrayList<Integer> expList = new java.util.ArrayList<>();
+            for (int j = 0; j < len; j++) if (arr[j] == target) expList.add(j);
+            try {
+                java.util.List<Integer> actual = s.allIndicesOfValue(arr, target);
+                boolean pass = actual != null && actual.equals(expList);
+                System.out.println("AJ|stress-" + i + "|" + pass + "|size=" + (actual==null?-1:actual.size()) + "|size=" + expList.size());
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

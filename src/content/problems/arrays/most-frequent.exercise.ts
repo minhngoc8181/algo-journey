@@ -22,16 +22,41 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.Map;\nimport java.util.HashMap;\n\nclass Solution {\n    int mostFrequentValue(List<Integer> numbers) {\n        // Write your code here\n        return 0;\n    }\n}`
+    code: `import java.util.Map;\nimport java.util.HashMap;\n\nclass Solution {\n    int mostFrequentValue(int[] numbers) {\n        // Write your code here\n        return 0;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'mostFrequentValue',
-    signature: 'int mostFrequentValue(List<Integer> numbers)',
+    signature: 'int mostFrequentValue(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250437,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(500);
+            java.util.HashMap<Integer, Integer> freq = new java.util.HashMap<>();
+            for (int x : arr) freq.put(x, freq.getOrDefault(x, 0) + 1);
+            int bestVal = arr[0], bestCnt = 0;
+            for (java.util.Map.Entry<Integer,Integer> e2 : freq.entrySet()) {
+                if (e2.getValue() > bestCnt || (e2.getValue() == bestCnt && e2.getKey() < bestVal)) {
+                    bestCnt = e2.getValue(); bestVal = e2.getKey();
+                }
+            }
+            int expected = bestVal;
+            try {
+                int actual = s.mostFrequentValue(arr);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

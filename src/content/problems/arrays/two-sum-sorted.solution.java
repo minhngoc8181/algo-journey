@@ -1,20 +1,13 @@
-import java.util.List;
-import java.util.Arrays;
-
 class Solution {
-    List<Integer> twoSumSorted(List<Integer> numbers, int target) {
+    int[] twoSumSorted(int[] numbers, int target) {
         int left = 0;
-        int right = numbers.size() - 1;
+        int right = numbers.length - 1;
         while (left < right) {
-            int sum = numbers.get(left) + numbers.get(right);
-            if (sum == target) {
-                return Arrays.asList(left, right);
-            } else if (sum < target) {
-                left += 1;
-            } else {
-                right -= 1;
-            }
+            int sum = numbers[left] + numbers[right];
+            if (sum == target) return new int[]{left, right};
+            else if (sum < target) left++;
+            else right--;
         }
-        return Arrays.asList(-1, -1);
+        return new int[]{-1, -1};
     }
 }

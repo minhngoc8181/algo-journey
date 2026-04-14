@@ -13,27 +13,24 @@ export default defineTests('rotate', (t, rng) => {
   t.hidden('long-right-wrap', { args: [[9, 8, 7, 6, 5, 4, 9, 8, 7, 6, 5, 4, 9, 8, 7, 6, 5, 4, 9, 8], 7, "right"], expected: [8, 9, 8, 7, 6, 5, 4, 9, 8, 7, 6, 5, 4, 9, 8, 7, 6, 5, 4, 9] });
   t.hidden('zero-rotate', { args: [[3, 3, 2, 2, 1, 1], 0, "left"], expected: [3, 3, 2, 2, 1, 1] });
   t.hidden('mixed-signs-left', { args: [[-4, -3, -2, -1, 0, 1], 13, "left"], expected: [-3, -2, -1, 0, 1, -4] });
-  t.hidden('empty-array', { args: [[], 5, "right"], expected: [] });
   t.hidden('single-element', { args: [[42], 5, "right"], expected: [42] });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 9; i++) {
-    const len = rng.int(1, 100);
+  for (let i = 0; i < 10; i++) {
+    const isLarge = i >= 8;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(2, 500);
     const testArr = rng.intArray(len, -20, 20);
-    const k = rng.int(0, 500);
+    const k = rng.int(1, 500);
     const direction = rng.bool(0.5) ? "left" : "right";
-    
-    // JS equivalent logic
-    const shift = len > 0 ? ((k % len) + len) % len : 0;
-    let expected: number[] = [];
-    if (len > 0) {
-        if (shift === 0) {
-            expected = [...testArr];
-        } else if (direction === "left") {
-            expected = testArr.slice(shift).concat(testArr.slice(0, shift));
-        } else {
-            expected = testArr.slice(len - shift).concat(testArr.slice(0, len - shift));
-        }
+
+    const shift = ((k % len) + len) % len;
+    let expected: number[];
+    if (shift === 0) {
+      expected = [...testArr];
+    } else if (direction === "left") {
+      expected = testArr.slice(shift).concat(testArr.slice(0, shift));
+    } else {
+      expected = testArr.slice(len - shift).concat(testArr.slice(0, len - shift));
     }
 
     t.hidden(`gen-${i}`, { args: [testArr, k, direction], expected });

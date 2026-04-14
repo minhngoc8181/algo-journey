@@ -22,16 +22,37 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> rotateArray(List<Integer> numbers, int k, String direction) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
+    code: `class Solution {\n    int[] rotateArray(int[] numbers, int k, String direction) {\n        // Write your code here\n        return new int[0];\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'rotateArray',
-    signature: 'List<Integer> rotateArray(List<Integer> numbers, int k, String direction)',
+    signature: 'int[] rotateArray(int[] numbers, int k, String direction)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250435,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2001) - 1000;
+            int k = rng.nextInt(len + 1);
+            String dir = (rng.nextInt(2) == 0) ? "left" : "right";
+            int shift = (dir.equals("left") ? k : len - k) % len;
+            int[] expected = new int[len];
+            for (int j = 0; j < len; j++) expected[j] = arr[(j + shift) % len];
+            try {
+                int[] actual = s.rotateArray(arr.clone(), k, dir);
+                System.out.println("AJ|stress-" + i + "|" + java.util.Arrays.equals(actual, expected) + "|ok|ok");
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

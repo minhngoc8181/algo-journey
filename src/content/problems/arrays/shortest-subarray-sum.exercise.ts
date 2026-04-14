@@ -23,16 +23,43 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\n\nclass Solution {\n    int shortestSubarraySum(List<Integer> numbers, int target) {\n        // Write your code here\n        return 0;\n    }\n}`
+    code: `class Solution {\n    int shortestSubarraySum(int[] numbers, int target) {\n        // Write your code here\n        return 0;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'shortestSubarraySum',
-    signature: 'int shortestSubarraySum(List<Integer> numbers, int target)',
+    signature: 'int shortestSubarraySum(int[] numbers, int target)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250440,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(100) + 1; // positive only
+            int target = len / 2 * 50; // roughly achievable
+            int left2 = 0, cur = 0, minLen = len + 1;
+            for (int right = 0; right < len; right++) {
+                cur += arr[right];
+                while (cur >= target) {
+                    int wl = right - left2 + 1;
+                    if (wl < minLen) minLen = wl;
+                    cur -= arr[left2++];
+                }
+            }
+            int expected = minLen > len ? 0 : minLen;
+            try {
+                int actual = s.shortestSubarraySum(arr, target);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

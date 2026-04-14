@@ -17,9 +17,11 @@ export default defineTests('all-indices', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 10; i++) {
-    const len = rng.int(10, 5000);
+    const isLarge = i >= 8;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const testArr = rng.intArray(len, -20, 20); // smaller range to produce multiple hits
-    const tgt = rng.bool(0.7) ? rng.pick(testArr) : rng.int(100, 200);
+    // Only test 1 absent generated test, the rest are present
+    const tgt = (i === 1) ? rng.int(100, 200) : rng.pick(testArr);
     
     const expected = [];
     for(let j=0; j<testArr.length; j++) {

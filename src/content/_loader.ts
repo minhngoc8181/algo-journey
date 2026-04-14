@@ -50,6 +50,11 @@ export interface ExerciseDefinition {
     comparator: ComparatorType;
     timeLimitMs?: number;
     outputLimitBytes?: number;
+    /**
+     * Optional Java-side generator for large tests.
+     * The gen loop logic is ported to Java and runs inside Wasm — no 64KB limit.
+     */
+    javaGenerator?: import('../shared/types').JavaGenerator;
   };
 }
 
@@ -232,6 +237,7 @@ function definitionToExercise(
       hiddenTestStrategy: hiddenTests.length > 0
         ? { type: 'inline', tests: hiddenTests }
         : undefined,
+      javaGenerator: def.evaluation.javaGenerator,
     },
   };
 }

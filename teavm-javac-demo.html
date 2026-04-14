@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeaVM JavaC Demo</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --border: #334155;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #0b1020 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .sub {
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.55;
+    }
+    .note {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border: 1px solid rgba(37,99,235,.35);
+      background: rgba(37,99,235,.12);
+      border-radius: 12px;
+      color: #dbeafe;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+    .card {
+      background: rgba(17,24,39,.92);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    button {
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary {
+      background: var(--blue);
+      border-color: #1d4ed8;
+    }
+    button:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+    }
+    textarea {
+      width: 100%;
+      min-height: 520px;
+      resize: vertical;
+      background: #020617;
+      color: #e2e8f0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      outline: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+    }
+    .status.info { color: #dbeafe; background: rgba(37,99,235,.16); border-color: rgba(37,99,235,.5); }
+    .status.ok { color: #dcfce7; background: rgba(22,163,74,.16); border-color: rgba(22,163,74,.5); }
+    .status.err { color: #fee2e2; background: rgba(220,38,38,.16); border-color: rgba(220,38,38,.5); }
+    .status.warn { color: #fef3c7; background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.5); }
+    .log {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      min-height: 260px;
+      padding: 12px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow: auto;
+    }
+    .summary {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px dashed rgba(148,163,184,.25);
+      font-size: 14px;
+    }
+    .row:last-child { border-bottom: none; }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .pill.ok { background: rgba(22,163,74,.16); color: #bbf7d0; }
+    .pill.err { background: rgba(220,38,38,.16); color: #fecaca; }
+    .pill.warn { background: rgba(245,158,11,.16); color: #fde68a; }
+    .pill.info { background: rgba(37,99,235,.16); color: #dbeafe; }
+    .small {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .tests {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .test {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #0b1220;
+      border-bottom: 1px solid rgba(148,163,184,.14);
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .test:last-child { border-bottom: none; }
+    .legend code {
+      background: rgba(148,163,184,.12);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    @media (max-width: 920px) {
+      .grid { grid-template-columns: 1fr; }
+      textarea { min-height: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>TeaVM JavaC Demo</h1>
+    <div class="sub">
+      A real in-browser Java demo using <strong>teavm-javac</strong>: compile Java source in the browser,
+      generate WebAssembly, run it, and report <strong>Accepted</strong>, <strong>Compile Error</strong>, or <strong>TLE</strong>.
+    </div>
+    <div class="note legend">
+      This page uses the official <code>teavm-javac</code> browser pipeline. It compiles <code>Solution.java</code> together with a generated
+      <code>RunnerMain.java</code>, then runs the generated WebAssembly in a Worker and terminates that Worker on timeout.
+      Depending on browser support and network access to TeaVM assets, the first load may take a while.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Editor</h2>
+        <div class="toolbar">
+          <button id="sampleOk">Load AC Sample</button>
+          <button id="sampleErr">Load Compile Error Sample</button>
+          <button id="sampleTle">Load TLE Sample</button>
+          <button id="clearBtn">Clear</button>
+          <button id="runBtn" class="primary">Run with TeaVM-JavaC</button>
+        </div>
+        <textarea id="editor" spellcheck="false"></textarea>
+      </div>
+
+      <div class="card">
+        <h2>Execution Result</h2>
+        <div id="status" class="status info">Idle</div>
+        <div id="log" class="log">Press "Run with TeaVM-JavaC" to start.</div>
+
+        <div id="summary" class="summary">
+          <div class="row"><span>Verdict</span><span class="pill info">-</span></div>
+          <div class="row"><span>Message</span><span>-</span></div>
+          <div class="row"><span>Time limit</span><span>1500 ms</span></div>
+        </div>
+
+        <div id="tests" class="tests"></div>
+
+        <div class="small">
+          Demo scenario: the harness expects a method <code>firstIndexOf(int[] numbers, int target)</code> inside <code>class Solution</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { load } from 'https://teavm.org/playground/compiler.wasm-runtime.js';
+
+    const COMPILER_WASM_URL = 'https://teavm.org/playground/compiler.wasm';
+    const SDK_URL = 'https://teavm.org/playground/compile-classlib-teavm.bin';
+    const RUNTIME_CLASSLIB_URL = 'https://teavm.org/playground/runtime-classlib-teavm.bin';
+    const TIME_LIMIT_MS = 1500;
+    const OUTPUT_NAME = 'app';
+
+    const editor = document.getElementById('editor');
+    const runBtn = document.getElementById('runBtn');
+    const sampleOk = document.getElementById('sampleOk');
+    const sampleErr = document.getElementById('sampleErr');
+    const sampleTle = document.getElementById('sampleTle');
+    const clearBtn = document.getElementById('clearBtn');
+    const statusEl = document.getElementById('status');
+    const logEl = document.getElementById('log');
+    const summaryEl = document.getElementById('summary');
+    const testsEl = document.getElementById('tests');
+
+    const okSample = `class Solution {
+    public int firstIndexOf(int[] numbers, int target) {
+        for (int i = 0; i < numbers.length; i++) {
+            if (numbers[i] == target) {
+                return i;
+            }
+        }
+        return -1;
+    }
+}`;
+
+    const errorSample = `class Solution {
+    public int firstIndexOf(int[] numbers, int target) {
+        for (int i = 0; i < numbers.length; i++) {
+            if (numbers[i] == target) {
+                return i;
+            }
+        // missing closing braces on purpose
+}`;
+
+    const tleSample = `class Solution {
+    public int firstIndexOf(int[] numbers, int target) {
+        while (true) {
+        }
+    }
+}`;
+
+    editor.value = okSample;
+
+    sampleOk.onclick = () => editor.value = okSample;
+    sampleErr.onclick = () => editor.value = errorSample;
+    sampleTle.onclick = () => editor.value = tleSample;
+    clearBtn.onclick = () => {
+      editor.value = '';
+      testsEl.innerHTML = '';
+      setStatus('info', 'Idle');
+      setLog('Editor cleared.');
+      setSummary('Idle', 'info', '-');
+    };
+
+    let compilerInstance = null;
+    let compilerLibrary = null;
+    let compilerInitPromise = null;
+
+    function setStatus(kind, text) {
+      statusEl.className = 'status ' + kind;
+      statusEl.textContent = text;
+    }
+
+    function setLog(text) {
+      logEl.textContent = text;
+    }
+
+    function appendLog(text) {
+      logEl.textContent += text;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    function setSummary(verdict, verdictClass, message) {
+      summaryEl.innerHTML = `
+        <div class="row"><span>Verdict</span><span class="pill ${verdictClass}">${escapeHtml(verdict)}</span></div>
+        <div class="row"><span>Message</span><span>${escapeHtml(message)}</span></div>
+        <div class="row"><span>Time limit</span><span>${TIME_LIMIT_MS} ms</span></div>
+      `;
+    }
+
+    function renderTests(cases) {
+      if (!cases.length) {
+        testsEl.innerHTML = '';
+        return;
+      }
+      testsEl.innerHTML = cases.map(test => `
+        <div class="test">
+          <span>${escapeHtml(test.id)} | expected=${escapeHtml(test.expected)} | actual=${escapeHtml(test.actual)}</span>
+          <span class="pill ${test.pass ? 'ok' : 'err'}">${test.pass ? 'PASS' : 'FAIL'}</span>
+        </div>
+      `).join('');
+    }
+
+    function createRunnerMainSource() {
+      return `public class RunnerMain {
+    public static void main(String[] args) {
+        Solution s = new Solution();
+        runCase("case1", s.firstIndexOf(new int[]{1, 2, 3}, 2), 1);
+        runCase("case2", s.firstIndexOf(new int[]{5, 5, 5}, 7), -1);
+        System.out.println("__AJ_DONE__");
+    }
+
+    static void runCase(String id, int actual, int expected) {
+        boolean pass = actual == expected;
+        System.out.println("AJ_CASE|" + id + "|" + pass + "|" + actual + "|" + expected);
+    }
+}`;
+    }
+
+    async function initCompiler() {
+      if (compilerInitPromise) return compilerInitPromise;
+
+      compilerInitPromise = (async () => {
+        setStatus('info', 'Loading compiler...');
+        setLog('[init] Loading TeaVM compiler runtime...\n');
+        const teavm = await load(COMPILER_WASM_URL);
+        compilerLibrary = teavm.exports;
+        compilerInstance = compilerLibrary.createCompiler();
+
+        appendLog('[init] Fetching compile class library...\n');
+        const [sdkResponse, runtimeResponse] = await Promise.all([
+          fetch(SDK_URL),
+          fetch(RUNTIME_CLASSLIB_URL)
+        ]);
+
+        if (!sdkResponse.ok) {
+          throw new Error('Failed to fetch compile classlib: ' + sdkResponse.status);
+        }
+        if (!runtimeResponse.ok) {
+          throw new Error('Failed to fetch runtime classlib: ' + runtimeResponse.status);
+        }
+
+        compilerInstance.setSdk(new Int8Array(await sdkResponse.arrayBuffer()));
+        compilerInstance.setTeaVMClasslib(new Int8Array(await runtimeResponse.arrayBuffer()));
+        appendLog('[init] Compiler ready.\n');
+      })();
+
+      return compilerInitPromise;
+    }
+
+    function compileJava(solutionSource) {
+      const diagnostics = [];
+      compilerInstance.clearSourceFiles();
+      if (typeof compilerInstance.clearInputClassFiles === 'function') {
+        compilerInstance.clearInputClassFiles();
+      }
+      if (typeof compilerInstance.clearOutputFiles === 'function') {
+        compilerInstance.clearOutputFiles();
+      }
+
+      const listener = compilerInstance.onDiagnostic(diagnostic => {
+        diagnostics.push({
+          type: diagnostic.type,
+          severity: diagnostic.severity,
+          fileName: diagnostic.fileName,
+          lineNumber: diagnostic.lineNumber,
+          columnNumber: diagnostic.columnNumber || 0,
+          message: diagnostic.message,
+        });
+      });
+
+      try {
+        compilerInstance.addSourceFile('Solution.java', solutionSource);
+        compilerInstance.addSourceFile('RunnerMain.java', createRunnerMainSource());
+
+        const compiled = compilerInstance.compile();
+        if (!compiled) {
+          return { ok: false, stage: 'compile', diagnostics };
+        }
+
+        const generated = compilerInstance.generateWebAssembly({
+          outputName: OUTPUT_NAME,
+          mainClass: 'RunnerMain',
+        });
+
+        if (!generated) {
+          return { ok: false, stage: 'teavm', diagnostics };
+        }
+
+        const wasm = compilerInstance.getWebAssemblyOutputFile(OUTPUT_NAME + '.wasm');
+        if (!wasm) {
+          return {
+            ok: false,
+            stage: 'teavm',
+            diagnostics: diagnostics.concat([{ type: 'system', severity: 'error', fileName: '', lineNumber: 0, message: 'No wasm output produced.' }])
+          };
+        }
+
+        return { ok: true, diagnostics, wasm };
+      } finally {
+        listener.destroy();
+      }
+    }
+
+    function createRunWorker() {
+      const workerSource = `
+        self.onmessage = async (event) => {
+          const { wasmBuffer, runtimeUrl } = event.data;
+          try {
+            const mod = await import(runtimeUrl);
+            const logs = [];
+            const originalLog = console.log;
+            const originalError = console.error;
+            console.log = (...args) => logs.push(args.map(v => String(v)).join(' '));
+            console.error = (...args) => logs.push(args.map(v => String(v)).join(' '));
+            try {
+              const teavm = await mod.load(new Uint8Array(wasmBuffer));
+              teavm.exports.main([]);
+              self.postMessage({ ok: true, logs });
+            } finally {
+              console.log = originalLog;
+              console.error = originalError;
+            }
+          } catch (error) {
+            self.postMessage({ ok: false, error: String(error && error.message ? error.message : error) });
+          }
+        };
+      `;
+
+      const blob = new Blob([workerSource], { type: 'application/javascript' });
+      return new Worker(URL.createObjectURL(blob), { type: 'module' });
+    }
+
+    function runWithTimeout(wasm) {
+      return new Promise((resolve) => {
+        const worker = createRunWorker();
+        const timer = setTimeout(() => {
+          worker.terminate();
+          resolve({ ok: false, timeout: true });
+        }, TIME_LIMIT_MS);
+
+        worker.onmessage = (event) => {
+          clearTimeout(timer);
+          worker.terminate();
+          resolve(event.data);
+        };
+
+        worker.onerror = (event) => {
+          clearTimeout(timer);
+          worker.terminate();
+          resolve({ ok: false, error: event.message || 'Worker error' });
+        };
+
+        const wasmBuffer = wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength);
+        worker.postMessage(
+          {
+            wasmBuffer,
+            runtimeUrl: 'https://teavm.org/playground/compiler.wasm-runtime.js'
+          },
+          [wasmBuffer]
+        );
+      });
+    }
+
+    function parseCaseLines(logs) {
+      const cases = [];
+      for (const line of logs) {
+        if (!line.startsWith('AJ_CASE|')) continue;
+        const parts = line.split('|');
+        if (parts.length < 5) continue;
+        cases.push({
+          id: parts[1],
+          pass: parts[2] === 'true',
+          actual: parts[3],
+          expected: parts[4]
+        });
+      }
+      return cases;
+    }
+
+    function formatDiagnostics(diagnostics) {
+      if (!diagnostics.length) return 'Unknown compiler error';
+      return diagnostics.map(d => {
+        const location = d.fileName ? `${d.fileName}:${d.lineNumber}${d.columnNumber ? ':' + d.columnNumber : ''}` : 'unknown';
+        return `[${d.type}/${d.severity}] ${location} - ${d.message}`;
+      }).join('\n');
+    }
+
+    async function onRun() {
+      const solutionSource = editor.value.trim();
+      renderTests([]);
+
+      if (!solutionSource) {
+        setStatus('err', 'No code');
+        setLog('Editor is empty.');
+        setSummary('No Input', 'err', 'Please enter Java code before running.');
+        return;
+      }
+
+      runBtn.disabled = true;
+      try {
+        setStatus('info', 'Initializing...');
+        setSummary('Running', 'info', 'Preparing TeaVM-JavaC...');
+        setLog('');
+
+        await initCompiler();
+
+        appendLog('[compile] Adding Solution.java and RunnerMain.java...\n');
+        setStatus('info', 'Compiling...');
+        const compileResult = compileJava(solutionSource);
+
+        if (!compileResult.ok) {
+          setStatus('err', 'Compile Error');
+          setLog('[compile] failed\n\n' + formatDiagnostics(compileResult.diagnostics));
+          setSummary('Compile Error', 'err', 'Java compilation failed.');
+          return;
+        }
+
+        appendLog('[compile] success\n');
+        appendLog('[teavm] WebAssembly module generated\n');
+        setStatus('info', 'Running...');
+        setSummary('Running', 'warn', 'Executing generated WebAssembly...');
+
+        const runResult = await runWithTimeout(compileResult.wasm);
+
+        if (runResult.timeout) {
+          setStatus('warn', 'TLE');
+          setLog('[compile] success\n[run] started\n[run] exceeded ' + TIME_LIMIT_MS + ' ms\n');
+          setSummary('TLE', 'warn', 'Time Limit Exceeded');
+          return;
+        }
+
+        if (!runResult.ok) {
+          setStatus('err', 'Runtime Error');
+          setLog('[compile] success\n[run] failed\n\n' + (runResult.error || 'Unknown runtime error'));
+          setSummary('Runtime Error', 'err', runResult.error || 'Unknown runtime error');
+          return;
+        }
+
+        const cases = parseCaseLines(runResult.logs || []);
+        const allPassed = cases.length > 0 && cases.every(test => test.pass);
+        renderTests(cases);
+        setLog((runResult.logs || []).join('\n') || '[run] finished with no output');
+
+        if (allPassed) {
+          setStatus('ok', 'Accepted');
+          setSummary('Accepted', 'ok', 'All visible tests passed.');
+        } else {
+          setStatus('err', 'Wrong Answer');
+          setSummary('Wrong Answer', 'err', 'At least one visible test failed.');
+        }
+      } catch (error) {
+        setStatus('err', 'System Error');
+        setLog(String(error && error.stack ? error.stack : error));
+        setSummary('System Error', 'err', String(error && error.message ? error.message : error));
+      } finally {
+        runBtn.disabled = false;
+      }
+    }
+
+    runBtn.addEventListener('click', onRun);
+  </script>
+</body>
+</html>

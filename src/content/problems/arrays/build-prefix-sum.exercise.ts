@@ -22,16 +22,34 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> buildPrefixSum(List<Integer> numbers) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
+    code: `class Solution {\n    int[] buildPrefixSum(int[] numbers) {\n        // Write your code here\n        return new int[0];\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'buildPrefixSum',
-    signature: 'List<Integer> buildPrefixSum(List<Integer> numbers)',
+    signature: 'int[] buildPrefixSum(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250431,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2001) - 1000;
+            int[] expected = new int[len + 1];
+            for (int j = 0; j < len; j++) expected[j + 1] = expected[j] + arr[j];
+            try {
+                int[] actual = s.buildPrefixSum(arr);
+                System.out.println("AJ|stress-" + i + "|" + java.util.Arrays.equals(actual, expected) + "|len=" + (actual==null?-1:actual.length) + "|len=" + expected.length);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

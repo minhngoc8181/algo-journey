@@ -190,6 +190,12 @@
   letter-spacing: -0.01em;
 }
 
+.status-accepted { color: var(--color-success-text); }
+.status-wrong-answer { color: var(--color-error-text); }
+.status-runtime-error { color: var(--color-warning-text); }
+.status-tle { color: var(--color-warning-text); }
+.status-compile-error { color: var(--color-info-text); }
+
 .result-summary__stats {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
@@ -244,6 +250,16 @@
 .test-case__status--failed {
   color: var(--color-error-text);
   background: var(--color-error-subtle);
+}
+
+.test-case__status--wa {
+  color: var(--color-error-text);
+  background: var(--color-error-subtle);
+}
+
+.test-case__status--re {
+  color: var(--color-warning-text);
+  background: var(--color-warning-subtle);
 }
 
 .test-case__body {

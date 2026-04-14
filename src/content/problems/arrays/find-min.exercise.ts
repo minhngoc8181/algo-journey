@@ -22,16 +22,34 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\n\nclass Solution {\n    int findMinValue(List<Integer> numbers) {\n        // Write your code here\n        return 0;\n    }\n}`
+    code: `class Solution {\n    int findMinValue(int[] numbers) {\n        // Write your code here\n        return 0;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'findMinValue',
-    signature: 'int findMinValue(List<Integer> numbers)',
+    signature: 'int findMinValue(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250416,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2000001) - 1000000;
+            int expected = arr[0];
+            for (int x : arr) if (x < expected) expected = x;
+            try {
+                int actual = s.findMinValue(arr);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

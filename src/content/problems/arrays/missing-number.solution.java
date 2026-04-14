@@ -1,12 +1,10 @@
-import java.util.List;
-
 class Solution {
-    int missingNumber(List<Integer> numbers) {
-        int n = numbers.size();
+    int missingNumber(int[] numbers) {
+        int n = numbers.length;
         int expected = (n * (n + 1)) / 2;
         int actual = 0;
-        for (int i = 0; i < numbers.size(); i += 1) {
-            actual += numbers.get(i);
+        for (int i = 0; i < numbers.length; i++) {
+            actual += numbers[i];
         }
         return expected - actual;
     }

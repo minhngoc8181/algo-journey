@@ -22,16 +22,38 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\n\nclass Solution {\n    int longestConsecutiveRun(List<Integer> numbers) {\n        // Write your code here\n        return 1;\n    }\n}`
+    code: `class Solution {\n    int longestConsecutiveRun(int[] numbers) {\n        // Write your code here\n        return 1;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'longestConsecutiveRun',
-    signature: 'int longestConsecutiveRun(List<Integer> numbers)',
+    signature: 'int longestConsecutiveRun(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250425,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(10); // small range => duplicates
+            int expected = (len == 0) ? 0 : 1;
+            int cur = 1;
+            for (int j = 1; j < len; j++) {
+                if (arr[j] == arr[j-1]) { cur++; if (cur > expected) expected = cur; }
+                else cur = 1;
+            }
+            try {
+                int actual = s.longestConsecutiveRun(arr);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

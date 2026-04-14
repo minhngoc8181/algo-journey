@@ -1,16 +1,16 @@
 import java.util.List;
 
 class Solution {
-    int countMaxOccurrences(List<Integer> numbers) {
-        int max = numbers.get(0);
-        for (int i = 1; i < numbers.size(); i += 1) {
-            if (numbers.get(i) > max) {
-                max = numbers.get(i);
+    int countMaxOccurrences(int[] numbers) {
+        int max = numbers[0];
+        for (int i = 1; i < numbers.length; i += 1) {
+            if (numbers[i] > max) {
+                max = numbers[i];
             }
         }
         int count = 0;
-        for (int i = 0; i < numbers.size(); i += 1) {
-            if (numbers.get(i) == max) {
+        for (int i = 0; i < numbers.length; i += 1) {
+            if (numbers[i] == max) {
                 count += 1;
             }
         }

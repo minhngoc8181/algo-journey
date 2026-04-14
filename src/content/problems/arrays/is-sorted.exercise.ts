@@ -23,16 +23,42 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\n\nclass Solution {\n    boolean isSortedAscending(List<Integer> numbers) {\n        // Write your code here\n        return true;\n    }\n}`
+    code: `class Solution {\n    boolean isSortedAscending(int[] numbers) {\n        // Write your code here\n        return true;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'isSortedAscending',
-    signature: 'boolean isSortedAscending(List<Integer> numbers)',
+    signature: 'boolean isSortedAscending(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250421,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            // Half sorted, half not
+            boolean sorted = (i % 2 == 0);
+            if (sorted) {
+                arr[0] = rng.nextInt(10);
+                for (int j = 1; j < len; j++) arr[j] = arr[j-1] + rng.nextInt(5);
+            } else {
+                for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2001) - 1000;
+                arr[rng.nextInt(len)] = -999999; // guarantee unsorted
+            }
+            boolean expected = true;
+            for (int j = 1; j < len; j++) if (arr[j] < arr[j-1]) { expected = false; break; }
+            try {
+                boolean actual = s.isSortedAscending(arr);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

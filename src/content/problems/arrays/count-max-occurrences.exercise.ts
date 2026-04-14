@@ -22,16 +22,36 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\n\nclass Solution {\n    int countMaxOccurrences(List<Integer> numbers) {\n        // Write your code here\n        return 0;\n    }\n}`
+    code: `class Solution {\n    int countMaxOccurrences(int[] numbers) {\n        // Write your code here\n        return 0;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'countMaxOccurrences',
-    signature: 'int countMaxOccurrences(List<Integer> numbers)',
+    signature: 'int countMaxOccurrences(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250429,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(1000);
+            int max = arr[0];
+            for (int x : arr) if (x > max) max = x;
+            int expected = 0;
+            for (int x : arr) if (x == max) expected++;
+            try {
+                int actual = s.countMaxOccurrences(arr);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

@@ -17,18 +17,17 @@ export default defineTests('max-sum-subarray-k', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 10; i++) {
-    const len = rng.int(5, 5000);
-    const k = rng.int(1, len);
+    const isLarge = i >= 8;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(5, 500);
+    const k = rng.int(1, Math.min(len, 1000));
     const testArr = rng.intArray(len, -100, 100);
-    
+
     let windowSum = 0;
-    for (let j = 0; j < k; j++) {
-        windowSum += testArr[j]!;
-    }
+    for (let j = 0; j < k; j++) windowSum += testArr[j]!;
     let maxSum = windowSum;
     for (let j = k; j < testArr.length; j++) {
-        windowSum += testArr[j]! - testArr[j - k]!;
-        if (windowSum > maxSum) maxSum = windowSum;
+      windowSum += testArr[j]! - testArr[j - k]!;
+      if (windowSum > maxSum) maxSum = windowSum;
     }
 
     t.hidden(`gen-${i}`, { args: [testArr, k], expected: maxSum });

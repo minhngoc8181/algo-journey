@@ -16,9 +16,10 @@ export default defineTests('find-cycle-length', (t, rng) => {
   t.hidden('entirely-loop-1000', { args: [generateGraph(0, 1000)], expected: 1000 });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 10; i++) {
-    const tailLen = rng.int(0, 500);
-    const cycleLen = rng.int(2, 500);
+  for (let i = 0; i < 11; i++) {
+    const isLarge = i >= 9;
+    const tailLen = isLarge ? rng.int(500, 1000) : rng.int(0, 500);
+    const cycleLen = isLarge ? rng.int(500, 1000) : rng.int(2, 500);
     const graph = generateGraph(tailLen, cycleLen);
     t.hidden(`gen-${i}`, { args: [graph], expected: cycleLen });
   }

@@ -9,5 +9,25 @@ export default defineExercise({
   examples: [{ input: 'arr = [1, 2, 3, 2, 1], target = 2', output: '2' }],
   starter: { file: 'Solution.java', code: `class Solution {\n    int countOccurrences(int[] arr, int target) {\n        // Write your code here\n        return 0;\n    }\n}` },
   requiredStructure: { className: 'Solution', methodName: 'countOccurrences', signature: 'int countOccurrences(int[] arr, int target)' },
-  evaluation: { comparator: 'exact_json' },
+  evaluation: { comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250420,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(201) - 100;
+            int target = arr[rng.nextInt(len)];
+            int expected = 0;
+            for (int x : arr) if (x == target) expected++;
+            try {
+                int actual = s.countOccurrences(arr, target);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
+  },
 });

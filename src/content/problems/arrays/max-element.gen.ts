@@ -7,11 +7,12 @@ export default defineTests('max-element', (t, rng) => {
   t.hidden('max-at-start', { args: [[100, 1, 2, 3]], expected: 100 });
   t.hidden('max-at-end', { args: [[1, 2, 3, 100]], expected: 100 });
   t.hidden('all-negative', { args: [[-100, -200, -1]], expected: -1 });
-  const large = rng.intArray(10000, -100000, 100000);
+  const large = rng.intArray(1000, -100000, 100000);
   t.hidden('stress-10k', { args: [large], expected: Math.max(...large) });
 
-  for (let i = 0; i < 15; i++) {
-    const len = rng.int(5, 5000);
+  for (let i = 0; i < 12; i++) {
+    const isLarge = i >= 10;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(5, 500);
     const testArr = rng.intArray(len, -20000, 20000);
     t.hidden(`gen-${i}`, { args: [testArr], expected: Math.max(...testArr) });
   }

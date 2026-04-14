@@ -16,28 +16,35 @@ export default defineTests('pairs-with-sum', (t, rng) => {
   t.hidden('heavy-duplication', { args: [[12, 0, 12, 0, 6, 6, 12, 0, 6, 6], 12], expected: [[0, 12], [6, 6]] });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 10; i++) {
-    const len = rng.int(10, 200); // O(n^2) logic in starter/generators, keep it reasonable
-    const testArr = rng.intArray(len, -20, 20);
-    const target = rng.int(0, 10);
-    
-    // Generator logic
+  // Rule #6: ensure most generated tests have real pairs (no empty result)
+  function computePairs(arr: number[], target: number): number[][] {
     const set = new Set<string>();
-    const expected = [];
-    for (let u = 0; u < testArr.length; u++) {
-        for (let v = u + 1; v < testArr.length; v++) {
-            if (testArr[u]! + testArr[v]! === target) {
-                const min = Math.min(testArr[u]!, testArr[v]!);
-                const max = Math.max(testArr[u]!, testArr[v]!);
-                const key = `${min}:${max}`;
-                if (!set.has(key)) {
-                    set.add(key);
-                    expected.push([min, max]);
-                }
-            }
+    const result: number[][] = [];
+    for (let u = 0; u < arr.length; u++) {
+      for (let v = u + 1; v < arr.length; v++) {
+        if (arr[u]! + arr[v]! === target) {
+          const mn = Math.min(arr[u]!, arr[v]!);
+          const mx = Math.max(arr[u]!, arr[v]!);
+          const key = `${mn}:${mx}`;
+          if (!set.has(key)) { set.add(key); result.push([mn, mx]); }
         }
+      }
     }
+    return result;
+  }
 
-    t.hidden(`gen-${i}`, { args: [testArr, target], expected });
+  for (let i = 0; i < 10; i++) {
+    const len = rng.int(10, 150);
+    const testArr = rng.intArray(len, -20, 20);
+    // Force target to be sum of two known elements – one absent only for i===1
+    let target: number;
+    if (i === 1) {
+      target = rng.int(100, 200); // guaranteed no pair
+    } else {
+      const ia = rng.int(0, len - 2);
+      const ib = rng.int(ia + 1, len - 1);
+      target = testArr[ia]! + testArr[ib]!;
+    }
+    t.hidden(`gen-${i}`, { args: [testArr, target], expected: computePairs(testArr, target) });
   }
 });

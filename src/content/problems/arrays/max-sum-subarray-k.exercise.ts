@@ -22,16 +22,36 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\n\nclass Solution {\n    int maxSumSubarrayK(List<Integer> numbers, int k) {\n        // Write your code here\n        return 0;\n    }\n}`
+    code: `class Solution {\n    int maxSumSubarrayK(int[] numbers, int k) {\n        // Write your code here\n        return 0;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'maxSumSubarrayK',
-    signature: 'int maxSumSubarrayK(List<Integer> numbers, int k)',
+    signature: 'int maxSumSubarrayK(int[] numbers, int k)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250432,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int k = rng.nextInt(Math.min(len / 2, 1000)) + 1;
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2001) - 1000;
+            int win = 0; for (int j = 0; j < k; j++) win += arr[j];
+            int expected = win;
+            for (int j = k; j < len; j++) { win += arr[j] - arr[j-k]; if (win > expected) expected = win; }
+            try {
+                int actual = s.maxSumSubarrayK(arr, k);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

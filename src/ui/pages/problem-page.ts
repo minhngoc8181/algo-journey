@@ -6,7 +6,7 @@ import { el, svgIcon, icons, render } from '../../shared/dom-utils';
 import { exerciseLoader } from '../../exercise-engine/exercise-loader';
 import { progressStore } from '../../progress/progress-store';
 import { router } from '../../app/router';
-import { mockRun } from '../../runner/mock-runner';
+import { javaRun } from '../../runner/java-runner';
 import type { Exercise, RunResult, TestResult } from '../../shared/types';
 
 // Monaco editor instance reference
@@ -577,14 +577,10 @@ async function handleRun(exercise: Exercise, isSubmit = false): Promise<void> {
   btnToUpdate.appendChild(el('div', { className: 'spinner' }));
   btnToUpdate.appendChild(el('span', { text: isSubmit ? 'Submitting...' : 'Running...' }));
 
-  // Get custom input if any
-  const customInputElem = document.getElementById('custom-testcase-input') as HTMLTextAreaElement | null;
-  const customInputRaw = customInputElem?.value.trim();
-  const customInput = customInputRaw ? customInputRaw : undefined;
 
   try {
     // Mock run (will be replaced with real compiler/runner later)
-    const result = await mockRun(exercise, code, customInput, isSubmit);
+    const result = await javaRun(exercise, code, isSubmit, exercise.limits.timeLimitMs || 1000);
 
     // Update progress
     const currentProgress = await progressStore.getProgress(exercise.id);
@@ -671,17 +667,23 @@ function renderResults(result: RunResult): void {
   // Summary
   const passed = result.tests.filter(t => t.status === 'passed').length;
   const total = result.tests.length;
-  const statusText = result.status === 'accepted' ? 'Accepted' :
-    result.status === 'wrong_answer' ? 'Wrong Answer' :
-    result.status === 'runtime_error' ? 'Runtime Error' :
-    result.status === 'time_limit_exceeded' ? 'Time Limit Exceeded' : result.status;
-  const statusClass = result.status === 'accepted' ? 'status-accepted' : 'status-wrong-answer';
+  const statusText =
+    result.status === 'accepted'            ? 'Accepted' :
+    result.status === 'wrong_answer'        ? 'Wrong Answer' :
+    result.status === 'runtime_error'       ? 'Runtime Error' :
+    result.status === 'time_limit_exceeded' ? 'Time Limit Exceeded' :
+    result.status === 'compile_error'       ? 'Compilation Error' : result.status;
+  const statusClass =
+    result.status === 'accepted'            ? 'status-accepted' :
+    result.status === 'wrong_answer'        ? 'status-wrong-answer' :
+    result.status === 'runtime_error'       ? 'status-runtime-error' :
+    result.status === 'time_limit_exceeded' ? 'status-tle' :
+    result.status === 'compile_error'       ? 'status-compile-error' : 'status-wrong-answer';
 
   const summary = el('div', { className: 'result-summary', children: [
     el('span', { className: `result-summary__status ${statusClass}`, text: statusText }),
     el('span', { className: 'result-summary__stats', text: `${passed}/${total} tests passed · ${result.elapsedMs}ms` }),
   ]});
-
   panelResult.appendChild(summary);
 
   // Test list
@@ -712,20 +714,32 @@ function renderCompileErrors(body: HTMLElement, result: RunResult): void {
   body.appendChild(errorsDiv);
 }
 
+// ── Verdict helpers ──────────────────────────────────────
+
+interface Verdict { label: string; cssClass: string; }
+
+function getTestVerdict(test: TestResult): Verdict {
+  switch (test.status) {
+    case 'passed': return { label: '✓ AC',  cssClass: 'test-case__status--passed' };
+    case 'failed': return { label: '✗ WA',  cssClass: 'test-case__status--wa' };
+    case 'error':  return { label: '✗ RE',  cssClass: 'test-case__status--re' };
+    default:       return { label: '?',     cssClass: 'test-case__status--failed' };
+  }
+}
+
 function createTestCaseElement(test: TestResult): HTMLElement {
-  const statusClass = test.status === 'passed' ? 'test-case__status--passed' : 'test-case__status--failed';
-  const statusText = test.status === 'passed' ? '✓ Passed' : '✗ Failed';
+  const verdict = getTestVerdict(test);
 
   const header = el('div', { className: 'test-case__header', children: [
     el('span', { className: 'test-case__name', text: test.name }),
-    el('span', { className: `test-case__status ${statusClass}`, text: statusText }),
+    el('span', { className: `test-case__status ${verdict.cssClass}`, text: verdict.label }),
   ]});
 
   const testCase = el('div', { className: 'test-case' });
   testCase.appendChild(header);
 
   // Show details for visible tests
-  if (test.visibility === 'visible' && (test.inputPreview || test.expectedPreview || test.actualPreview)) {
+  if (test.visibility === 'visible' && (test.inputPreview || test.expectedPreview || test.actualPreview || test.message)) {
     const body = el('div', { className: 'test-case__body' });
 
     if (test.inputPreview) {
@@ -766,6 +780,15 @@ function createExampleRow(label: string, value: string): HTMLElement {
 function formatStatement(text: string): string {
   // Simple markdown-like: backtick to <code>
   return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+export function setEditorValue(code: string): void {
+  if (editorInstance) {
+    editorInstance.setValue(code);
+  } else {
+    const ta = document.querySelector('#monaco-editor-container textarea') as HTMLTextAreaElement | null;
+    if (ta) ta.value = code;
+  }
 }
 
 export function disposeProblemPage(): void {

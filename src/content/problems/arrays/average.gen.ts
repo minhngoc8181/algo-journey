@@ -16,8 +16,13 @@ export default defineTests('average', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 11; i++) {
-    const len = rng.int(10, 5000);
-    const testArr = rng.intArray(len, -1000, 1000);
+    const isLarge = i >= 9;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
+    let testArr;
+    if (i % 3 === 0) testArr = rng.intArray(len, 10, 1000); // mostly positive
+    else if (i % 3 === 1) testArr = rng.intArray(len, -1000, -10); // mostly negative
+    else testArr = rng.intArray(len, -1000, 1000); // mixed
+    
     const sum = testArr.reduce((acc, val) => acc + val, 0);
     const expected = Math.trunc(sum / len); // Java integer division
     t.hidden(`gen-${i}`, { args: [testArr], expected });

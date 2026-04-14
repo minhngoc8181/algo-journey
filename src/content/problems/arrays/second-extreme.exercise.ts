@@ -22,16 +22,40 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\nimport java.util.Collections;\n\nclass Solution {\n    Integer secondExtreme(List<Integer> numbers, String mode) {\n        // Write your code here\n        return null;\n    }\n}`
+    code: `import java.util.TreeSet;\n\nclass Solution {\n    Integer secondExtreme(int[] numbers, String mode) {\n        // Write your code here\n        return null;\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'secondExtreme',
-    signature: 'Integer secondExtreme(List<Integer> numbers, String mode)',
+    signature: 'Integer secondExtreme(int[] numbers, String mode)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250443,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(10000) - 5000;
+            String mode = (rng.nextInt(2) == 0) ? "largest" : "smallest";
+            java.util.TreeSet<Integer> uniq = new java.util.TreeSet<>();
+            for (int x : arr) uniq.add(x);
+            Integer expected = null;
+            if (uniq.size() >= 2) {
+                expected = mode.equals("largest") ? uniq.lower(uniq.last()) : uniq.higher(uniq.first());
+            }
+            try {
+                Integer actual = s.secondExtreme(arr, mode);
+                boolean pass = (actual == null && expected == null) || (actual != null && actual.equals(expected));
+                System.out.println("AJ|stress-" + i + "|" + pass + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

@@ -9,7 +9,6 @@ export default defineTests('two-sum-basic', (t, rng) => {
   t.hidden('zeros', { args: [[0, 4, 3, 0], 0], expected: [0, 3] });
   t.hidden('large-values', { args: [[1000000, 500000, 500000], 1000000], expected: [1, 2] });
 
-  // Stress: array of 1000 elements with one known pair
   const arr = rng.intArray(998, 1, 50000);
   const a = 60001, b = 60002;
   arr.push(a, b);
@@ -18,23 +17,23 @@ export default defineTests('two-sum-basic', (t, rng) => {
   const idxB = shuffled.indexOf(b);
   t.hidden('stress-1k', { args: [shuffled, a + b], expected: [Math.min(idxA, idxB), Math.max(idxA, idxB)] });
 
-  for (let i = 0; i < 15; i++) {
-    const len = rng.int(10, 500);
+  for (let i = 0; i < 13; i++) {
+    const isLarge = i >= 11;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const testArr = rng.intArray(len, 1, 1000);
+    // Guarantee a pair exists
     const i1 = rng.int(0, len - 2);
     const i2 = rng.int(i1 + 1, len - 1);
     const target = testArr[i1]! + testArr[i2]!;
-    
+
     let expected = [-1, -1];
-    outer: for(let x=0; x<len; x++) {
-        for(let y=x+1; y<len; y++) {
-            if(testArr[x]! + testArr[y]! === target) {
-                expected = [x, y];
-                break outer;
-            }
+    outer: for (let x = 0; x < len; x++) {
+      for (let y = x + 1; y < len; y++) {
+        if (testArr[x]! + testArr[y]! === target) {
+          expected = [x, y]; break outer;
         }
+      }
     }
-    
     t.hidden(`gen-${i}`, { args: [testArr, target], expected });
   }
 });

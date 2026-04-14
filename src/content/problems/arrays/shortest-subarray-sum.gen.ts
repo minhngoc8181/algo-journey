@@ -15,26 +15,34 @@ export default defineTests('shortest-subarray-sum', (t, rng) => {
   t.hidden('large-target-not-found', { args: [[100, 200, 300], 1000], expected: 0 });
   t.hidden('decreasing-elements', { args: [[10, 5, 2, 1], 12], expected: 2 });
 
-  // ── Generated Tests ──
-  for (let i = 0; i < 10; i++) {
-    const len = rng.int(5, 500);
-    const testArr = rng.intArray(len, 1, 100);
-    const target = rng.int(10, 1000);
-    
-    // JS Logic
-    let left = 0;
-    let sum = 0;
-    let minLen = len + 1;
-    for (let right = 0; right < len; right++) {
-        sum += testArr[right]!;
-        while (sum >= target) {
-            minLen = Math.min(minLen, right - left + 1);
-            sum -= testArr[left]!;
-            left++;
-        }
+  // ── Generated Tests ── Rule #6: ensure most tests have target reachable
+  function solve(arr: number[], target: number): number {
+    let left = 0, sum = 0, minLen = arr.length + 1;
+    for (let right = 0; right < arr.length; right++) {
+      sum += arr[right]!;
+      while (sum >= target) {
+        minLen = Math.min(minLen, right - left + 1);
+        sum -= arr[left]!;
+        left++;
+      }
     }
-    const expected = minLen > len ? 0 : minLen;
+    return minLen > arr.length ? 0 : minLen;
+  }
 
-    t.hidden(`gen-${i}`, { args: [testArr, target], expected });
+  for (let i = 0; i < 10; i++) {
+    const isLarge = i >= 8;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(5, 500);
+    const testArr = rng.intArray(len, 1, 100);
+    // Force target to be reachable for all but i===1
+    let target: number;
+    if (i === 1) {
+      target = rng.int(len * 100 + 1, len * 100 + 1000); // too large, returns 0
+    } else {
+      // pick window [l..r] and use its sum as target
+      const l = rng.int(0, len - 2);
+      const r = rng.int(l + 1, Math.min(l + 10, len - 1));
+      target = testArr.slice(l, r + 1).reduce((a, b) => a + b, 0);
+    }
+    t.hidden(`gen-${i}`, { args: [testArr, target], expected: solve(testArr, target) });
   }
 });

@@ -14,7 +14,8 @@ export default defineTests('find-min', (t, rng) => {
 
   // ── Generated Tests ──
   for (let i = 0; i < 13; i++) {
-    const len = rng.int(5, 5000);
+    const isLarge = i >= 11;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(5, 500);
     const testArr = rng.intArray(len, -10000, 10000);
     t.hidden(`gen-${i}`, { args: [testArr], expected: Math.min(...testArr) });
   }

@@ -4,15 +4,14 @@ import java.util.Set;
 import java.util.HashSet;
 
 class Solution {
-    List<List<Integer>> pairsWithTargetSum(List<Integer> numbers, int target) {
+    List<List<Integer>> pairsWithTargetSum(int[] numbers, int target) {
         Set<String> seenGroups = new HashSet<>();
         List<List<Integer>> pairs = new ArrayList<>();
-        
-        for (int i = 0; i < numbers.size(); i++) {
-            for (int j = i + 1; j < numbers.size(); j++) {
-                if (numbers.get(i) + numbers.get(j) == target) {
-                    int a = Math.min(numbers.get(i), numbers.get(j));
-                    int b = Math.max(numbers.get(i), numbers.get(j));
+        for (int i = 0; i < numbers.length; i++) {
+            for (int j = i + 1; j < numbers.length; j++) {
+                if (numbers[i] + numbers[j] == target) {
+                    int a = Math.min(numbers[i], numbers[j]);
+                    int b = Math.max(numbers[i], numbers[j]);
                     String key = a + ":" + b;
                     if (!seenGroups.contains(key)) {
                         seenGroups.add(key);

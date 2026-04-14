@@ -39,5 +39,37 @@ export default defineExercise({
     signature: 'int firstIndexOf(int[] numbers, int target)',
   },
 
-  evaluation: { comparator: 'exact_json' },
+  evaluation: {
+    comparator: 'exact_json',
+    /**
+     * Large-array stress tests (up to 100K elements) using Java's RNG.
+     * Generated programmatically inside Wasm — no literals, no IO imports.
+     * Reference: linear scan O(n). Tests algorithmic complexity.
+     */
+    javaGenerator: {
+      count: 10,
+      seed: 20250414,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 10; i++) {
+            int len = (i >= 8) ? (80000 + rng.nextInt(20001)) : (500 + rng.nextInt(1500));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(1001) - 500;
+            int tgt = arr.length > 0 ? arr[rng.nextInt(arr.length)] : rng.nextInt(1001) + 1000;
+            // Reference: O(n) linear scan (always correct)
+            int expected = -1;
+            for (int j = 0; j < arr.length; j++) {
+                if (arr[j] == tgt) { expected = j; break; }
+            }
+            try {
+                int actual = s.firstIndexOf(arr, tgt);
+                boolean pass = (actual == expected);
+                System.out.println("AJ|stress-" + i + "|" + pass + "|" + actual + "|" + expected);
+            } catch (Exception e) {
+                System.out.println("AJ_ERROR|stress-" + i + ": " + e);
+            }
+        }`,
+    },
+  },
 });

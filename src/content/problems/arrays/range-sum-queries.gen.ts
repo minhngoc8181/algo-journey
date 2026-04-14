@@ -14,28 +14,23 @@ export default defineTests('range-sum-queries', (t, rng) => {
   t.hidden('overlapping-queries', { args: [[1, 2, 3, 4], [[0, 2], [1, 3], [0, 3]]], expected: [6, 9, 10] });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 12; i++) {
-    const len = rng.int(10, 500);
-    const testArr = rng.intArray(len, -20, 20);
-    const queries: number[][] = [];
-    const numQueries = rng.int(1, 200);
-    
-    for (let j = 0; j < numQueries; j++) {
-        const l = rng.int(0, len - 1);
-        const r = rng.int(l, len - 1);
-        queries.push([l, r]);
-    }
-    
-    // JS Logic
-    const expected: number[] = [];
+  function computeRanges(arr: number[], queries: number[][]): number[] {
     const prefix = [0];
-    for (let j = 0; j < len; j++) {
-        prefix.push(prefix[j]! + testArr[j]!);
-    }
-    for (const q of queries) {
-        expected.push(prefix[q[1]! + 1]! - prefix[q[0]!]!);
-    }
+    for (let j = 0; j < arr.length; j++) prefix.push(prefix[j]! + arr[j]!);
+    return queries.map(q => prefix[q[1]! + 1]! - prefix[q[0]!]!);
+  }
 
-    t.hidden(`gen-${i}`, { args: [testArr, queries], expected });
+  for (let i = 0; i < 12; i++) {
+    const isLarge = i >= 10;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
+    const testArr = rng.intArray(len, -20, 20);
+    const numQueries = isLarge ? rng.int(100, 500) : rng.int(1, 200);
+    const queries: number[][] = [];
+    for (let j = 0; j < numQueries; j++) {
+      const l = rng.int(0, len - 1);
+      const r = rng.int(l, len - 1);
+      queries.push([l, r]);
+    }
+    t.hidden(`gen-${i}`, { args: [testArr, queries], expected: computeRanges(testArr, queries) });
   }
 });

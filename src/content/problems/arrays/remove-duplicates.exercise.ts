@@ -22,16 +22,39 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> removeDuplicates(List<Integer> numbers) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
+    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> removeDuplicates(int[] numbers) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'removeDuplicates',
-    signature: 'List<Integer> removeDuplicates(List<Integer> numbers)',
+    signature: 'List<Integer> removeDuplicates(int[] numbers)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250436,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(1000);
+            // Reference: preserve first occurrence order using seen set
+            java.util.LinkedHashSet<Integer> seen = new java.util.LinkedHashSet<>();
+            for (int x : arr) seen.add(x);
+            int[] expected = new int[seen.size()];
+            int idx = 0; for (int x : seen) expected[idx++] = x;
+            try {
+                java.util.List<Integer> actualList = s.removeDuplicates(arr);
+                int[] actual = actualList.stream().mapToInt(Integer::intValue).toArray();
+                boolean pass = java.util.Arrays.equals(actual, expected);
+                System.out.println("AJ|stress-" + i + "|" + pass + "|size=" + actual.length + "|size=" + expected.length);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

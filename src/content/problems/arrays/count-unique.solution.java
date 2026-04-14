@@ -1,13 +1,10 @@
-import java.util.List;
-import java.util.ArrayList;
+import java.util.HashSet;
 
 class Solution {
-    int countUniqueValues(List<Integer> numbers) {
-        List<Integer> seen = new ArrayList<>();
-        for (int i = 0; i < numbers.size(); i += 1) {
-            if (!seen.contains(numbers.get(i))) {
-                seen.add(numbers.get(i));
-            }
+    int countUniqueValues(int[] numbers) {
+        HashSet<Integer> seen = new HashSet<>();
+        for (int i = 0; i < numbers.length; i += 1) {
+            seen.add(numbers[i]);
         }
         return seen.size();
     }

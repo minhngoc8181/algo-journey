@@ -17,19 +17,17 @@ export default defineTests('first-index-of', (t, rng) => {
   t.hidden('large-no-match', { args: [[-9, -7, -5, -3, -1, 1, 3, 5, 9, -9, -7, -5, -3, -1, 1, 3, 5, 9], 7], expected: -1 });
   t.hidden('large-repeated-front', { args: [[5, -7, -5, -3, -1, 1, 3, 7, 9, -9, -7, 5, -3], 5], expected: 0 });
 
-  // ── Generated ──
+  // ── Generated (large arrays now safe via stdin/ByteArrayInputStream) ──
   for (let i = 0; i < 10; i++) {
-    const len = rng.int(10, 2000);
+    const isLarge = i >= 8;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 2000);
     const testArr: number[] = rng.intArray(len, -500, 500);
-    
-    // Safety check with RNG
     let tgt = 0;
-    if (rng.bool(0.7) && testArr.length > 0) {
+    if (testArr.length > 0) {
         tgt = testArr[rng.int(0, testArr.length - 1)]!;
     } else {
-        tgt = rng.int(1000, 2000); // guaranteed absent
+        tgt = rng.int(1000, 2000);
     }
-    
     const expected = testArr.indexOf(tgt);
     t.hidden(`gen-${i}`, { args: [testArr, tgt], expected });
   }

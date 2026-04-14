@@ -1,11 +1,16 @@
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 
 class Solution {
-    List<Integer> sortDescending(List<Integer> numbers) {
-        List<Integer> sorted = new ArrayList<>(numbers);
-        Collections.sort(sorted, Collections.reverseOrder());
+    int[] sortDescending(int[] numbers) {
+        int[] sorted = numbers.clone();
+        Arrays.sort(sorted);
+        // reverse
+        int left = 0, right = sorted.length - 1;
+        while (left < right) {
+            int tmp = sorted[left];
+            sorted[left++] = sorted[right];
+            sorted[right--] = tmp;
+        }
         return sorted;
     }
 }

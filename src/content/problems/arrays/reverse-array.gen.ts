@@ -7,11 +7,12 @@ export default defineTests('reverse-array', (t, rng) => {
   t.hidden('already-reversed', { args: [[5, 4, 3, 2, 1]], expected: [1, 2, 3, 4, 5] });
   t.hidden('palindrome', { args: [[1, 2, 3, 2, 1]], expected: [1, 2, 3, 2, 1] });
   t.hidden('negatives', { args: [[-1, -2, -3]], expected: [-3, -2, -1] });
-  const large = rng.intArray(5000, -10000, 10000);
+  const large = rng.intArray(1000, -10000, 10000);
   t.hidden('stress-5k', { args: [large], expected: [...large].reverse() });
 
-  for (let i = 0; i < 15; i++) {
-    const len = rng.int(10, 2000);
+  for (let i = 0; i < 12; i++) {
+    const isLarge = i >= 10;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 2000);
     const testArr = rng.intArray(len, -1000, 1000);
     t.hidden(`gen-${i}`, { args: [testArr], expected: [...testArr].reverse() });
   }

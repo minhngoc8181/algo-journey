@@ -22,16 +22,42 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> intersectSorted(List<Integer> left, List<Integer> right) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
+    code: `import java.util.List;\nimport java.util.ArrayList;\n\nclass Solution {\n    List<Integer> intersectSorted(int[] left, int[] right) {\n        // Write your code here\n        return new ArrayList<>();\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'intersectSorted',
-    signature: 'List<Integer> intersectSorted(List<Integer> left, List<Integer> right)',
+    signature: 'List<Integer> intersectSorted(int[] left, int[] right)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250442,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int lenA = (i >= 3) ? (40000 + rng.nextInt(10001)) : (2000 + rng.nextInt(3001));
+            int lenB = (i >= 3) ? (40000 + rng.nextInt(10001)) : (2000 + rng.nextInt(3001));
+            int[] a = new int[lenA], b = new int[lenB];
+            for (int j = 0; j < lenA; j++) a[j] = rng.nextInt(2000001) - 1000000;
+            for (int j = 0; j < lenB; j++) b[j] = rng.nextInt(2000001) - 1000000;
+            java.util.Arrays.sort(a); java.util.Arrays.sort(b);
+            java.util.ArrayList<Integer> expList = new java.util.ArrayList<>();
+            int x = 0, y = 0;
+            while (x < lenA && y < lenB) {
+                if (a[x] == b[y]) { expList.add(a[x]); x++; y++; }
+                else if (a[x] < b[y]) x++; else y++;
+            }
+            try {
+                java.util.List<Integer> actual = s.intersectSorted(a, b);
+                boolean pass = actual != null && actual.equals(expList);
+                System.out.println("AJ|stress-" + i + "|" + pass + "|size=" + (actual==null?-1:actual.size()) + "|size=" + expList.size());
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });

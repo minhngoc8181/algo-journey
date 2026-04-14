@@ -12,9 +12,10 @@ export default defineTests('contains-value', (t, rng) => {
   
   // ── Generated Tests ──
   for (let i = 0; i < 15; i++) {
-    const len = rng.int(10, 5000);
+    const isLarge = i >= 13;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const testArr = rng.intArray(len, -500, 500);
-    const target = rng.bool(0.6) ? rng.pick(testArr) : rng.int(1000, 2000);
+    const target = (i === 1) ? rng.int(1000, 2000) : rng.pick(testArr);
     t.hidden(`gen-${i}`, { args: [testArr, target], expected: testArr.includes(target) });
   }
 });

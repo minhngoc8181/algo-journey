@@ -16,9 +16,10 @@ export default defineTests('intersect-sorted', (t, rng) => {
   t.hidden('staggered-duplicates', { args: [[2, 2, 2, 2, 2, 3, 3, 3, 4], [2, 2, 3, 3, 3, 3, 5]], expected: [2, 2, 3, 3, 3] });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 10; i++) {
-    const lenA = rng.int(10, 500);
-    const lenB = rng.int(10, 500);
+  for (let i = 0; i < 11; i++) {
+    const isLarge = i >= 9;
+    const lenA = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
+    const lenB = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
     const arrA = rng.intArray(lenA, -50, 50).sort((a, b) => a - b);
     const arrB = rng.intArray(lenB, -50, 50).sort((a, b) => a - b);
     

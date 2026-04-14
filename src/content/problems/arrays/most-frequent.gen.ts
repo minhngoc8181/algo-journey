@@ -19,23 +19,22 @@ export default defineTests('most-frequent', (t, rng) => {
   t.hidden('winner-not-largest', { args: [[3, 3, 2, 2, 1, 1, 1, 3, 3, 2, 2, 1, 1, 1, 3, 3, 2, 2, 1, 1, 1]], expected: 1 });
 
   // ── Generated Tests ──
-  for (let i = 0; i < 7; i++) {
-    const len = rng.int(10, 5000);
-    const testArr = rng.intArray(len, -20, 20); // frequent duplicates
-    
+  function computeMostFrequent(arr: number[]): number {
     const counts = new Map<number, number>();
-    let bestValue = testArr[0]!;
+    let bestValue = arr[0]!;
     let bestCount = 0;
-    
-    for (const val of testArr) {
-        const nextCount = (counts.get(val) || 0) + 1;
-        counts.set(val, nextCount);
-        if (nextCount > bestCount || (nextCount === bestCount && val < bestValue)) {
-            bestCount = nextCount;
-            bestValue = val;
-        }
+    for (const val of arr) {
+      const c = (counts.get(val) || 0) + 1;
+      counts.set(val, c);
+      if (c > bestCount || (c === bestCount && val < bestValue)) { bestCount = c; bestValue = val; }
     }
-    
-    t.hidden(`gen-${i}`, { args: [testArr], expected: bestValue });
+    return bestValue;
+  }
+
+  for (let i = 0; i < 7; i++) {
+    const isLarge = i >= 5;
+    const len = isLarge ? rng.int(1000, 2000) : rng.int(10, 500);
+    const testArr = rng.intArray(len, -20, 20);
+    t.hidden(`gen-${i}`, { args: [testArr], expected: computeMostFrequent(testArr) });
   }
 });

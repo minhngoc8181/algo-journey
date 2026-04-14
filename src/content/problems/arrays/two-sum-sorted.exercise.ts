@@ -22,16 +22,43 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `import java.util.List;\nimport java.util.ArrayList;\nimport java.util.Arrays;\n\nclass Solution {\n    List<Integer> twoSumSorted(List<Integer> numbers, int target) {\n        // Write your code here\n        return Arrays.asList(-1, -1);\n    }\n}`
+    code: `class Solution {\n    int[] twoSumSorted(int[] numbers, int target) {\n        // Write your code here\n        return new int[]{-1, -1};\n    }\n}`
   },
 
   requiredStructure: {
     className: 'Solution',
     methodName: 'twoSumSorted',
-    signature: 'List<Integer> twoSumSorted(List<Integer> numbers, int target)',
+    signature: 'int[] twoSumSorted(int[] numbers, int target)',
   },
 
   evaluation: {
     comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20250433,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        for (int i = 0; i < 5; i++) {
+            int len = (i >= 3) ? (80000 + rng.nextInt(20001)) : (5000 + rng.nextInt(5001));
+            int[] arr = new int[len];
+            for (int j = 0; j < len; j++) arr[j] = rng.nextInt(2000001) - 1000000;
+            java.util.Arrays.sort(arr);
+            // Pick two random indices to form target
+            int p = rng.nextInt(len / 2), q = len / 2 + rng.nextInt(len / 2);
+            int target = arr[p] + arr[q];
+            int lo = 0, hi = len - 1; int[] expected = {-1, -1};
+            while (lo < hi) {
+                int s2 = arr[lo] + arr[hi];
+                if (s2 == target) { expected[0] = lo; expected[1] = hi; break; }
+                else if (s2 < target) lo++; else hi--;
+            }
+            try {
+                int[] actual = s.twoSumSorted(arr, target);
+                boolean pass = actual != null && actual.length == 2 && actual[0] == expected[0] && actual[1] == expected[1];
+                System.out.println("AJ|stress-" + i + "|" + pass + "|[" + (actual==null?"null":actual[0]+","+actual[1]) + "]|[" + expected[0] + "," + expected[1] + "]");
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
   },
 });
