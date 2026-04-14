@@ -2,7 +2,7 @@ import { defineExercise } from '../../_loader';
 export default defineExercise({
   id: 'merge-sorted-arrays', version: 1, title: 'Merge Sorted Arrays',
   summary: 'Merge two sorted arrays into a single sorted array.', topic: 'arrays', difficulty: 'medium',
-  tags: ['two-pointers', 'merge'], estimatedMinutes: 20, order: 7, mode: 'function_implementation',
+  tags: ['two-pointers', 'merge', 'cse201'], estimatedMinutes: 15, order: 20, mode: 'function_implementation',
   learningGoals: ['Two-pointer merge technique', 'Build result array'],
   statement: 'Given two sorted integer arrays `a` and `b`, merge them into a single sorted array and return it.',
   constraints: ['Both arrays are sorted in ascending order.', 'Either array may be empty.'],

@@ -11,4 +11,12 @@ export default defineTests('contains-duplicate', (t, rng) => {
   t.hidden('stress-no-dup', { args: [rng.shuffle(unique)], expected: false });
   const withDup = [...unique, unique[0]!];
   t.hidden('stress-with-dup', { args: [rng.shuffle(withDup)], expected: true });
+
+  // ── Generated ──
+  for (let i = 0; i < 11; i++) {
+    const len = rng.int(5, 5000);
+    const testArr = rng.intArray(len, -1000, 1000);
+    const expected = new Set(testArr).size !== testArr.length;
+    t.hidden(`gen-${i}`, { args: [testArr], expected });
+  }
 });

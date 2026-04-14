@@ -210,7 +210,7 @@ function createProblemCard(entry: CatalogEntry, status: ProgressStatus, index: n
 
   // Tags — clickable for filtering
   const tagsEl = el('div', { className: 'problem-card__tags' });
-  for (const tag of entry.tags.slice(0, 2)) {
+  for (const tag of entry.tags.slice(0, 4)) {
     const isActive = activeTagFilter === tag;
     const tagEl = el('span', {
       className: `tag tag--clickable${isActive ? ' tag--active' : ''}`,

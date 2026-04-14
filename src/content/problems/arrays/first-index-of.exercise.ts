@@ -7,7 +7,7 @@ export default defineExercise({
   summary: 'Return the first index of target in the array.',
   topic: 'arrays',
   difficulty: 'easy',
-  tags: ['linear-search'],
+  tags: ['linear-search', 'cse201'],
   estimatedMinutes: 10,
   order: 1,
   mode: 'function_implementation',

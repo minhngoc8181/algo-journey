@@ -2,7 +2,7 @@ import { defineExercise } from '../../_loader';
 export default defineExercise({
   id: 'count-occurrences', version: 1, title: 'Count Occurrences',
   summary: 'Count how many times a target appears in an array.', topic: 'arrays', difficulty: 'easy',
-  tags: ['linear-search', 'counting'], estimatedMinutes: 10, order: 5, mode: 'function_implementation',
+  tags: ['linear-search', 'counting', 'cse201'], estimatedMinutes: 10, order: 5, mode: 'function_implementation',
   learningGoals: ['Count matching elements during iteration'],
   statement: 'Given an integer array `arr` and a `target`, return the number of times `target` appears in `arr`.',
   constraints: [],

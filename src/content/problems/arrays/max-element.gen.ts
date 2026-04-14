@@ -9,4 +9,10 @@ export default defineTests('max-element', (t, rng) => {
   t.hidden('all-negative', { args: [[-100, -200, -1]], expected: -1 });
   const large = rng.intArray(10000, -100000, 100000);
   t.hidden('stress-10k', { args: [large], expected: Math.max(...large) });
+
+  for (let i = 0; i < 15; i++) {
+    const len = rng.int(5, 5000);
+    const testArr = rng.intArray(len, -20000, 20000);
+    t.hidden(`gen-${i}`, { args: [testArr], expected: Math.max(...testArr) });
+  }
 });

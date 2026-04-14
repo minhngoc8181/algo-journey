@@ -12,7 +12,7 @@ import { validateStructure } from '../exercise-engine/structural-validator';
  * This is a development-time mock. In production, this will be
  * replaced by the real Worker-based compilation and execution pipeline.
  */
-export async function mockRun(exercise: Exercise, code: string): Promise<RunResult> {
+export async function mockRun(exercise: Exercise, code: string, customInput?: string, isSubmit = false): Promise<RunResult> {
   // Simulate processing delay
   await delay(300 + Math.random() * 500);
 
@@ -35,22 +35,56 @@ export async function mockRun(exercise: Exercise, code: string): Promise<RunResu
   // ── Execute visible tests with mock evaluation ──
   const startTime = Date.now();
   const testResults: TestResult[] = [];
+  
+  // Fake stdout for console
+  const hasPrints = code.includes('System.out.print') || code.includes('console.log');
+  const mockStdout = hasPrints 
+    ? `> System.out.println output:\n[Mock] Log entry at ${new Date().toLocaleTimeString()}\n[Mock] Variables initialized properly.\n...\n`
+    : '';
+
+  // If custom input is provided and it's NOT a submit action, ONLY run custom test!
+  if (!isSubmit && customInput) {
+    const customResult = mockEvaluateTest(exercise, code, { name: 'Custom Test', expected: 'Unknown' }, customInput);
+    testResults.push(customResult);
+    
+    return {
+      problemId: exercise.id,
+      exerciseVersion: exercise.version,
+      status: customResult.status === 'error' ? 'runtime_error' : 'accepted',
+      elapsedMs: Date.now() - startTime,
+      tests: testResults,
+      stdout: mockStdout,
+      compileDiagnostics: warnings.length > 0 ? warnings : undefined,
+    };
+  }
 
   for (const test of exercise.evaluation.visibleTests) {
     const result = mockEvaluateTest(exercise, code, test);
     testResults.push(result);
   }
 
-  // Add simulated hidden tests
-  const hiddenCount = exercise.limits.maxHiddenTests;
-  const allVisiblePassed = testResults.every(t => t.status === 'passed');
+  // Only add hidden tests if it is a Submit action!
+  if (isSubmit) {
+    const hiddenCount = exercise.limits.maxHiddenTests;
+    const allVisiblePassed = testResults.every(t => t.status === 'passed');
 
-  for (let i = 0; i < Math.min(hiddenCount, 5); i++) {
-    testResults.push({
-      name: `hidden-${i + 1}`,
-      visibility: 'hidden',
-      status: allVisiblePassed ? 'passed' : (Math.random() > 0.5 ? 'passed' : 'failed'),
-    });
+    if (exercise.evaluation.hiddenTestStrategy && exercise.evaluation.hiddenTestStrategy.type === 'inline' && exercise.evaluation.hiddenTestStrategy.tests) {
+      for (const test of exercise.evaluation.hiddenTestStrategy.tests) {
+        testResults.push({
+          name: test.name,
+          visibility: 'hidden',
+          status: allVisiblePassed ? 'passed' : (Math.random() > 0.5 ? 'passed' : 'failed'),
+        });
+      }
+    } else {
+      for (let i = 0; i < hiddenCount; i++) {
+          testResults.push({
+          name: `hidden-${i + 1}`,
+          visibility: 'hidden',
+          status: allVisiblePassed ? 'passed' : (Math.random() > 0.5 ? 'passed' : 'failed'),
+          });
+      }
+    }
   }
 
   const elapsedMs = Date.now() - startTime;
@@ -69,6 +103,9 @@ export async function mockRun(exercise: Exercise, code: string): Promise<RunResu
   if (warnings.length > 0) {
     result.compileDiagnostics = warnings;
   }
+  if (mockStdout) {
+    result.stdout = mockStdout;
+  }
 
   return result;
 }
@@ -77,6 +114,7 @@ function mockEvaluateTest(
   exercise: Exercise,
   code: string,
   test: { name: string; args?: unknown[]; expected: unknown },
+  customInput?: string
 ): TestResult {
   // Check if the starter code was modified
   const starterCode = exercise.editableFiles[0]?.starter ?? '';
@@ -112,9 +150,9 @@ function mockEvaluateTest(
       name: test.name,
       visibility: 'visible',
       status: 'passed',
-      inputPreview: test.args ? JSON.stringify(test.args) : undefined,
-      expectedPreview: JSON.stringify(test.expected),
-      actualPreview: JSON.stringify(test.expected),
+      inputPreview: customInput || (test.args ? JSON.stringify(test.args) : undefined),
+      expectedPreview: customInput ? 'Not strictly evaluated in Mock' : JSON.stringify(test.expected),
+      actualPreview: customInput ? `(Mock Output from Input: ${customInput})` : JSON.stringify(test.expected),
     };
   }
 
@@ -122,10 +160,10 @@ function mockEvaluateTest(
     name: test.name,
     visibility: 'visible',
     status: 'failed',
-    inputPreview: test.args ? JSON.stringify(test.args) : undefined,
-    expectedPreview: JSON.stringify(test.expected),
-    actualPreview: '(mock: incomplete implementation detected)',
-    message: 'Implementation appears incomplete — add loops, conditionals, or method calls',
+    inputPreview: customInput || (test.args ? JSON.stringify(test.args) : undefined),
+    expectedPreview: customInput ? 'Not strictly evaluated' : JSON.stringify(test.expected),
+    actualPreview: 'null',
+    message: 'Your implementation returned an incorrect value',
   };
 }
 

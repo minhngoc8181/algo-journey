@@ -6,4 +6,16 @@ export default defineTests('binary-search', (t, rng) => {
   const idx = rng.int(0, arr.length - 1);
   t.hidden('stress-found', { args: [arr, arr[idx]!], expected: idx });
   t.hidden('stress-not', { args: [arr, -999], expected: -1 });
+
+  for (let i = 0; i < 11; i++) {
+    const len = rng.int(5, 5000);
+    const testArr = rng.sortedUniqueIntArray(len, -20000, 20000);
+    if (rng.bool(0.6)) {
+      const targetIdx = rng.int(0, len - 1);
+      t.hidden(`gen-found-${i}`, { args: [testArr, testArr[targetIdx]!], expected: targetIdx });
+    } else {
+      const target = testArr[0]! - rng.int(1, 100);
+      t.hidden(`gen-not-${i}`, { args: [testArr, target], expected: -1 });
+    }
+  }
 });

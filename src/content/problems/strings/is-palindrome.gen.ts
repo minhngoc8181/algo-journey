@@ -8,7 +8,16 @@ export default defineTests('is-palindrome', (t, rng) => {
   t.hidden('two-diff', { args: ['ab'], expected: false });
   t.hidden('even-palindrome', { args: ['abba'], expected: true });
   t.hidden('almost', { args: ['abca'], expected: false });
-  const half = rng.string(500);
-  const palindrome = half + [...half].reverse().join('');
-  t.hidden('stress-1k', { args: [palindrome], expected: true });
+
+  for (let i = 0; i < 15; i++) {
+    const len = rng.int(5, 50);
+    const halfStr = rng.string(len, 'abcdefghijklmnopqrstuvwxyz');
+    if (rng.bool(0.5)) {
+      const p = halfStr + [...halfStr].reverse().join('');
+      t.hidden(`gen-${i}`, { args: [p], expected: true });
+    } else {
+      const p = halfStr + 'x' + [...halfStr].reverse().join('');
+      t.hidden(`gen-${i}`, { args: [p + 'y'], expected: false });
+    }
+  }
 });

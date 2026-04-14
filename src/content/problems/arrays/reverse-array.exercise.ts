@@ -2,7 +2,7 @@ import { defineExercise } from '../../_loader';
 export default defineExercise({
   id: 'reverse-array', version: 1, title: 'Reverse Array',
   summary: 'Reverse an integer array in place.', topic: 'arrays', difficulty: 'easy',
-  tags: ['two-pointers'], estimatedMinutes: 10, order: 3, mode: 'function_implementation',
+  tags: ['two-pointers', 'in-place', 'cse201'], estimatedMinutes: 10, order: 3, mode: 'function_implementation',
   learningGoals: ['Use two pointers to swap elements', 'Modify array in place'],
   statement: 'Given an integer array `arr`, reverse it in place and return the array.',
   constraints: ['Modify the original array.'],

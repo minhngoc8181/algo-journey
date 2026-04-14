@@ -10,4 +10,12 @@ export default defineTests('merge-sorted-arrays', (t, rng) => {
   const a = rng.sortedUniqueIntArray(5000, 1, 50000);
   const b = rng.sortedUniqueIntArray(5000, 1, 50000);
   t.hidden('stress-10k', { args: [a, b], expected: [...a, ...b].sort((x, y) => x - y) });
+
+  for (let i = 0; i < 15; i++) {
+    const lenA = rng.int(10, 2000);
+    const lenB = rng.int(10, 2000);
+    const arrA = rng.sortedUniqueIntArray(lenA, -10000, 10000);
+    const arrB = rng.sortedUniqueIntArray(lenB, -10000, 10000);
+    t.hidden(`gen-${i}`, { args: [arrA, arrB], expected: [...arrA, ...arrB].sort((x, y) => x - y) });
+  }
 });

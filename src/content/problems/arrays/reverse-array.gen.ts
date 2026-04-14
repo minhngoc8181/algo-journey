@@ -9,4 +9,10 @@ export default defineTests('reverse-array', (t, rng) => {
   t.hidden('negatives', { args: [[-1, -2, -3]], expected: [-3, -2, -1] });
   const large = rng.intArray(5000, -10000, 10000);
   t.hidden('stress-5k', { args: [large], expected: [...large].reverse() });
+
+  for (let i = 0; i < 15; i++) {
+    const len = rng.int(10, 2000);
+    const testArr = rng.intArray(len, -1000, 1000);
+    t.hidden(`gen-${i}`, { args: [testArr], expected: [...testArr].reverse() });
+  }
 });

@@ -2,7 +2,7 @@ import { defineExercise } from '../../_loader';
 export default defineExercise({
   id: 'max-element', version: 1, title: 'Maximum Element',
   summary: 'Find the maximum element in an array.', topic: 'arrays', difficulty: 'easy',
-  tags: ['array-traversal'], estimatedMinutes: 8, order: 4, mode: 'function_implementation',
+  tags: ['linear-search', 'extreme', 'cse201'], estimatedMinutes: 10, order: 2, mode: 'function_implementation',
   learningGoals: ['Track running maximum while iterating'],
   statement: 'Given an integer array `arr`, return the maximum element.',
   constraints: ['The array has at least one element.'],

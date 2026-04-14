@@ -7,4 +7,8 @@ export default defineTests('fizz-buzz', (t) => {
   t.hidden('n3', { args: [3], expected: ['1','2','Fizz'] });
   t.hidden('n30', { args: [30], expected: solveFizzBuzz(30) });
   t.hidden('n100', { args: [100], expected: solveFizzBuzz(100) });
+  for (let i = 0; i < 15; i++) {
+    const n = Math.floor(Math.random() * 500) + 1;
+    t.hidden(`gen-${i}`, { args: [n], expected: solveFizzBuzz(n) });
+  }
 });

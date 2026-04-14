@@ -17,4 +17,24 @@ export default defineTests('two-sum-basic', (t, rng) => {
   const idxA = shuffled.indexOf(a);
   const idxB = shuffled.indexOf(b);
   t.hidden('stress-1k', { args: [shuffled, a + b], expected: [Math.min(idxA, idxB), Math.max(idxA, idxB)] });
+
+  for (let i = 0; i < 15; i++) {
+    const len = rng.int(10, 500);
+    const testArr = rng.intArray(len, 1, 1000);
+    const i1 = rng.int(0, len - 2);
+    const i2 = rng.int(i1 + 1, len - 1);
+    const target = testArr[i1]! + testArr[i2]!;
+    
+    let expected = [-1, -1];
+    outer: for(let x=0; x<len; x++) {
+        for(let y=x+1; y<len; y++) {
+            if(testArr[x]! + testArr[y]! === target) {
+                expected = [x, y];
+                break outer;
+            }
+        }
+    }
+    
+    t.hidden(`gen-${i}`, { args: [testArr, target], expected });
+  }
 });

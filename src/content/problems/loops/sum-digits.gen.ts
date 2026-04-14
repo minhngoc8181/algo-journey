@@ -7,6 +7,8 @@ export default defineTests('sum-digits', (t, rng) => {
   t.hidden('all-nines', { args: [999], expected: 27 });
   t.hidden('power-10', { args: [1000], expected: 1 });
   t.hidden('large', { args: [999999999], expected: 81 });
-  const n = rng.int(100000, 999999999);
-  t.hidden('random', { args: [n], expected: solveDigitSum(n) });
+  for (let i = 0; i < 15; i++) {
+    const genN = rng.int(1000, 999999999);
+    t.hidden(`gen-${i}`, { args: [genN], expected: solveDigitSum(genN) });
+  }
 });

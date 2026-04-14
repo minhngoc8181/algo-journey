@@ -3,4 +3,13 @@ export default defineTests('simple-counter', (t) => {
   t.visible('basic', { operations: [['new'], ['increment'], ['increment'], ['getValue']], expected: 2 });
   t.hidden('initial', { operations: [['new'], ['getValue']], expected: 0 });
   t.hidden('many', { operations: [['new'], ['increment'], ['increment'], ['increment'], ['increment'], ['increment'], ['getValue']], expected: 5 });
+  
+  for (let i = 0; i < 17; i++) {
+    const ops: any[][] = [['new']];
+    let val = 0;
+    const numInc = Math.floor(Math.random() * 100) + 1;
+    for(let k=0; k<numInc; k++) { ops.push(['increment']); val++; }
+    ops.push(['getValue']);
+    t.hidden(`gen-${i}`, { operations: ops, expected: val });
+  }
 });

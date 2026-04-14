@@ -15,6 +15,9 @@ let editorInstance: import('monaco-editor').editor.IStandaloneCodeEditor | null 
 const SPLIT_RATIO_KEY = 'algopath:split-ratio';
 const DEFAULT_SPLIT = 50; // percent for left panel
 
+const SPLIT_V_RATIO_KEY = 'algopath:split-v-ratio';
+const DEFAULT_V_SPLIT = 50; // percent for editor section
+
 export async function renderProblemPage(container: HTMLElement, slug: string): Promise<void> {
   container.className = 'app-main app-main--full';
 
@@ -262,6 +265,19 @@ function createEditorPanel(exercise: Exercise, _starterCode: string): HTMLElemen
     },
   });
 
+  const submitBtn = el('button', {
+    className: 'run-btn',
+    id: 'submit-btn',
+    attrs: { style: 'background: var(--color-success); margin-left: var(--space-2);' },
+    children: [
+      svgIcon(icons.check, 14) as unknown as Node,
+      el('span', { text: 'Submit' }),
+    ],
+    on: {
+      click: () => handleRun(exercise, true),
+    },
+  });
+
   const resetBtn = el('button', {
     className: 'reset-btn',
     id: 'reset-btn',
@@ -274,28 +290,48 @@ function createEditorPanel(exercise: Exercise, _starterCode: string): HTMLElemen
   const spacer = el('div', { className: 'run-controls__spacer' });
   const controls = el('div', {
     className: 'run-controls',
-    children: [resetBtn, spacer, runBtn],
+    children: [resetBtn, spacer, runBtn, submitBtn],
   });
 
   // Result tabs
   const resultTabs = el('div', { className: 'tabs', id: 'result-tabs' });
-  resultTabs.appendChild(el('div', {
-    className: 'tab tab--active',
-    text: 'Result',
-    data: { resultTab: 'result' },
-  }));
-  resultTabs.appendChild(el('div', {
-    className: 'tab',
-    text: 'Console',
-    data: { resultTab: 'console' },
-  }));
+  const tabTestcase = el('div', { className: 'tab tab--active', text: 'Testcase', data: { resultTab: 'testcase' } });
+  const tabResult = el('div', { className: 'tab', text: 'Test Result', data: { resultTab: 'result' } });
+  const tabConsole = el('div', { className: 'tab', text: 'Console', data: { resultTab: 'console' } });
+  resultTabs.append(tabTestcase, tabResult, tabConsole);
 
   // Result body
   const resultBody = el('div', {
-    className: 'panel__body',
+    className: 'panel__body panel__body--no-pad',
     id: 'result-body',
-    attrs: { style: 'max-height: 200px; min-height: 120px;' },
   });
+
+  const panelTestcase = el('div', { id: 'panel-testcase', className: 'tab-panel', attrs: { style: 'display: block; padding: var(--space-4); height: 100%; box-sizing: border-box;' } });
+  const panelResult = el('div', { id: 'panel-result', className: 'tab-panel', attrs: { style: 'display: none; height: 100%; box-sizing: border-box;' } });
+  const panelConsole = el('div', { id: 'panel-console', className: 'tab-panel', attrs: { style: 'display: none; padding: 0; height: 100%; box-sizing: border-box;' } });
+
+  // Setup Testcase Panel
+  const customInputArea = el('textarea', {
+    id: 'custom-testcase-input',
+    className: 'font-mono',
+    attrs: {
+      style: 'width: 100%; height: 100%; min-height: 100px; resize: none; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-tertiary); color: var(--color-text-primary); outline: none;',
+      placeholder: 'Enter custom testcase input here (e.g. valid JSON args)'
+    }
+  });
+  if (exercise.examples.length > 0) {
+    customInputArea.value = exercise.examples[0]!.input;
+  }
+  panelTestcase.appendChild(customInputArea);
+
+  // Setup Console Panel
+  const consoleOutput = el('div', {
+    id: 'console-output',
+    className: 'console-output',
+    text: 'No standard output.',
+    attrs: { style: 'width: 100%; height: 100%; box-sizing: border-box;' }
+  });
+  panelConsole.appendChild(consoleOutput);
 
   const placeholder = el('div', {
     className: 'empty-state',
@@ -308,15 +344,121 @@ function createEditorPanel(exercise: Exercise, _starterCode: string): HTMLElemen
       }),
     ],
   });
-  resultBody.appendChild(placeholder);
+  panelResult.appendChild(placeholder);
 
-  panel.appendChild(editorHeader);
-  panel.appendChild(editorContainer);
-  panel.appendChild(controls);
-  panel.appendChild(resultTabs);
-  panel.appendChild(resultBody);
+  resultBody.append(panelTestcase, panelResult, panelConsole);
+
+  // Tab switching logic
+  const matchTabs = [tabTestcase, tabResult, tabConsole];
+  const matchPanels = [panelTestcase, panelResult, panelConsole];
+  
+  matchTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => {
+      matchTabs.forEach(t => t.classList.remove('tab--active'));
+      tab.classList.add('tab--active');
+      matchPanels.forEach(p => p.style.display = 'none');
+      matchPanels[index]!.style.display = 'block';
+    });
+  });
+
+  // Editor Section (Flexible)
+  const savedVPct = Number(localStorage.getItem(SPLIT_V_RATIO_KEY)) || DEFAULT_V_SPLIT;
+  const editorSection = el('div', {
+    className: 'editor-section',
+    attrs: { style: `display: flex; flex-direction: column; flex: 0 0 ${savedVPct}%; min-height: 0; overflow: hidden;` }
+  });
+  editorSection.appendChild(editorHeader);
+  editorContainer.style.minHeight = '0';
+  editorSection.appendChild(editorContainer);
+  
+  // Vertical Resizer between Editor and Results
+  const resizerV = el('div', { className: 'split-resizer-v', id: 'split-resizer-v', attrs: { 'aria-label': 'Drag to resize editor and results' } });
+  resizerV.appendChild(el('div', { className: 'split-resizer-v__handle' }));
+
+  // Bottom Section (Results)
+  const resultSection = el('div', {
+    className: 'result-section',
+    attrs: { style: 'display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden;' }
+  });
+  resultSection.appendChild(controls);
+  resultSection.appendChild(resultTabs);
+  // Guarantee result body expands and scrolls correctly
+  resultBody.style.flex = '1';
+  resultBody.style.overflowY = 'auto';
+  resultBody.style.minHeight = '0'; // Prevent flex-basis auto trap causing scroll cutoff
+  resultSection.appendChild(resultBody);
+
+  panel.appendChild(editorSection);
+  panel.appendChild(resizerV);
+  panel.appendChild(resultSection);
+
+  // Wire up drag-to-resize vertically
+  setTimeout(() => initVerticalSplitResizer(panel, editorSection, resizerV, resultSection), 100);
 
   return panel;
+}
+
+function initVerticalSplitResizer(container: HTMLElement, topPanel: HTMLElement, resizer: HTMLElement, bottomPanel: HTMLElement): void {
+  let dragging = false;
+
+  resizer.addEventListener('mousedown', (e: MouseEvent) => {
+    dragging = true;
+    resizer.classList.add('split-resizer-v--dragging');
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e: MouseEvent) => {
+    if (!dragging) return;
+    const rect = container.getBoundingClientRect();
+    const offset = e.clientY - rect.top;
+    const pct = Math.min(85, Math.max(15, (offset / rect.height) * 100));
+    topPanel.style.flex = `0 0 ${pct}%`;
+    bottomPanel.style.flex = `1 1 auto`;
+    editorInstance?.layout();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove('split-resizer-v--dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    
+    // Save ratio
+    const match = topPanel.style.flex.match(/0 0 ([\d.]+)%/);
+    if (match) localStorage.setItem(SPLIT_V_RATIO_KEY, match[1]!);
+  });
+
+  // Touch support
+  resizer.addEventListener('touchstart', (e: TouchEvent) => {
+    dragging = true;
+    resizer.classList.add('split-resizer-v--dragging');
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchmove', (e: TouchEvent) => {
+    if (!dragging) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const rect = container.getBoundingClientRect();
+    const offset = touch.clientY - rect.top;
+    const pct = Math.min(85, Math.max(15, (offset / rect.height) * 100));
+    topPanel.style.flex = `0 0 ${pct}%`;
+    bottomPanel.style.flex = `1 1 auto`;
+    editorInstance?.layout();
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    resizer.classList.remove('split-resizer-v--dragging');
+    
+    // Save ratio
+    const match = topPanel.style.flex.match(/0 0 ([\d.]+)%/);
+    if (match) localStorage.setItem(SPLIT_V_RATIO_KEY, match[1]!);
+  });
 }
 
 // ── Monaco Editor ──
@@ -411,7 +553,7 @@ function createTextareaFallback(container: HTMLElement, exercise: Exercise, code
 
 // ── Run / Reset Handlers ──
 
-async function handleRun(exercise: Exercise): Promise<void> {
+async function handleRun(exercise: Exercise, isSubmit = false): Promise<void> {
   const runBtn = document.getElementById('run-btn') as HTMLButtonElement | null;
   if (!runBtn) return;
 
@@ -425,15 +567,24 @@ async function handleRun(exercise: Exercise): Promise<void> {
   }
 
   // Update button state
-  runBtn.disabled = true;
-  runBtn.classList.add('run-btn--running');
-  runBtn.innerHTML = '';
-  runBtn.appendChild(el('div', { className: 'spinner' }));
-  runBtn.appendChild(el('span', { text: 'Running...' }));
+  const btnToUpdate = isSubmit ? (document.getElementById('submit-btn') as HTMLButtonElement) : runBtn;
+  if (!btnToUpdate) return;
+  const originalHtml = btnToUpdate.innerHTML;
+  
+  btnToUpdate.disabled = true;
+  btnToUpdate.classList.add('run-btn--running');
+  btnToUpdate.innerHTML = '';
+  btnToUpdate.appendChild(el('div', { className: 'spinner' }));
+  btnToUpdate.appendChild(el('span', { text: isSubmit ? 'Submitting...' : 'Running...' }));
+
+  // Get custom input if any
+  const customInputElem = document.getElementById('custom-testcase-input') as HTMLTextAreaElement | null;
+  const customInputRaw = customInputElem?.value.trim();
+  const customInput = customInputRaw ? customInputRaw : undefined;
 
   try {
     // Mock run (will be replaced with real compiler/runner later)
-    const result = await mockRun(exercise, code);
+    const result = await mockRun(exercise, code, customInput, isSubmit);
 
     // Update progress
     const currentProgress = await progressStore.getProgress(exercise.id);
@@ -461,11 +612,9 @@ async function handleRun(exercise: Exercise): Promise<void> {
       runtimeError: String(err),
     });
   } finally {
-    runBtn.disabled = false;
-    runBtn.classList.remove('run-btn--running');
-    runBtn.innerHTML = '';
-    runBtn.appendChild(svgIcon(icons.play, 14) as unknown as Node);
-    runBtn.appendChild(el('span', { text: 'Run' }));
+    btnToUpdate.disabled = false;
+    btnToUpdate.classList.remove('run-btn--running');
+    btnToUpdate.innerHTML = originalHtml;
   }
 }
 
@@ -482,17 +631,31 @@ function handleReset(exercise: Exercise): void {
 // ── Result Renderer ──
 
 function renderResults(result: RunResult): void {
-  const body = document.getElementById('result-body');
-  if (!body) return;
-  body.innerHTML = '';
+  const panelResult = document.getElementById('panel-result');
+  if (!panelResult) return;
+  panelResult.innerHTML = '';
+
+  // Switch tab automatically
+  const tabResult = document.querySelector('.tabs .tab[data-result-tab="result"]') as HTMLElement;
+  if(tabResult) tabResult.click();
+
+  // Update Console
+  const consoleOutput = document.getElementById('console-output');
+  if (consoleOutput) {
+    if (result.stdout) {
+      consoleOutput.textContent = result.stdout;
+    } else {
+      consoleOutput.textContent = 'No standard output.';
+    }
+  }
 
   if (result.status === 'compile_error') {
-    renderCompileErrors(body, result);
+    renderCompileErrors(panelResult, result);
     return;
   }
 
   if (result.status === 'platform_error') {
-    body.appendChild(el('div', {
+    panelResult.appendChild(el('div', {
       className: 'compile-errors',
       children: [el('div', {
         className: 'compile-error-item',
@@ -519,14 +682,14 @@ function renderResults(result: RunResult): void {
     el('span', { className: 'result-summary__stats', text: `${passed}/${total} tests passed · ${result.elapsedMs}ms` }),
   ]});
 
-  body.appendChild(summary);
+  panelResult.appendChild(summary);
 
   // Test list
   const testList = el('div', { className: 'test-list' });
   for (const test of result.tests) {
     testList.appendChild(createTestCaseElement(test));
   }
-  body.appendChild(testList);
+  panelResult.appendChild(testList);
 }
 
 function renderCompileErrors(body: HTMLElement, result: RunResult): void {

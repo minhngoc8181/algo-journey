@@ -6,7 +6,10 @@ export default defineTests('count-vowels', (t, rng) => {
   t.hidden('no-vowels', { args: ['bcdfg'], expected: 0 });
   t.hidden('uppercase', { args: ['AEIOU'], expected: 5 });
   t.hidden('mixed-case', { args: ['AeIoU'], expected: 5 });
-  const long = rng.string(5000, 'abcdefghijklmnopqrstuvwxyz');
   const vowelSet = new Set('aeiouAEIOU');
-  t.hidden('stress-5k', { args: [long], expected: [...long].filter(c => vowelSet.has(c)).length });
+  for (let i = 0; i < 15; i++) {
+    const len = rng.int(10, 500);
+    const testStr = rng.string(len, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    t.hidden(`gen-${i}`, { args: [testStr], expected: [...testStr].filter(c => vowelSet.has(c)).length });
+  }
 });
