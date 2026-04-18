@@ -23,7 +23,7 @@ export function createAppShell(): {
 
 function createHeader(): HTMLElement {
   const logoIcon = el('div', { className: 'app-logo-icon', text: 'A' });
-  const logoText = el('span', { text: 'AlgoPath' });
+  const logoText = el('span', { text: 'Algo Journey' });
   const logo = el('a', {
     className: 'app-logo',
     attrs: { href: '#/' },

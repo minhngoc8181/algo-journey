@@ -17,7 +17,8 @@ export type Topic =
   | 'math'
   | 'design'
   | 'collections'
-  | 'linked-list';
+  | 'linked-list'
+  | 'mono-stack';
 
 // ── Helper Classes (platform-injected, e.g. ListNode, TreeNode) ──
 export interface HelperClass {

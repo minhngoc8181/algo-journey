@@ -67,3 +67,9 @@ gcd,"Greatest Common Divisor",1000,euclidean
 is-prime,"Is Prime",1000,loop;optimization
 fibonacci,"Fibonacci Number",1000,dynamic-programming
 selection-sort,"Selection Sort",1000,in-place;cse201
+nearest-greater-element,"Nearest Greater Element",433,mono-stack;stack;cse201
+stock-span,"Stock Span",434,mono-stack;stack;cse201
+daily-temperatures,"Daily Temperatures",435,mono-stack;stack;cse201
+remove-k-digits,"Remove K Digits",436,mono-stack;greedy;string;cse201
+largest-rectangle-histogram,"Largest Rectangle in Histogram",437,mono-stack;stack;cse201
+sum-subarray-minimums,"Sum of Subarray Minimums",438,mono-stack;stack;math;cse201

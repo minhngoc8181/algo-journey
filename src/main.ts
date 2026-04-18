@@ -53,8 +53,8 @@ async function main(): Promise<void> {
         window.location.hash = slug ? `#/problem/${slug}` : '#/';
       },
     };
-    console.log('%c⚡ AlgoDev API ready → window.__algoDev', 'color:#6ee7b7;font-weight:bold;font-size:12px');
-    console.log('%c  Run tests: import("/auto_run_test.js")', 'color:#94a3b8;font-size:11px');
+    //console.log('%c⚡ AlgoDev API ready → window.__algoDev', 'color:#6ee7b7;font-weight:bold;font-size:12px');
+    //console.log('%c  Run tests: import("/auto_run_test.js")', 'color:#94a3b8;font-size:11px');
   }
 }
 
