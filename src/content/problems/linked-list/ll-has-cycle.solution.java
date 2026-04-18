@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     boolean hasCycle(ListNode head) {
         ListNode slow = head;

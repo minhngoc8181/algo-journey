@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int findCycleLength(int[] arr) {
         int slow = arr[0];

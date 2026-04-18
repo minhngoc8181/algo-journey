@@ -28,7 +28,7 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    int[] twoSumSorted(int[] numbers, int target) {\n        // Write your code here\n        return new int[]{-1, -1};\n    }\n}`
+    code: `import java.util.*;\n\nclass Solution {\n    int[] twoSumSorted(int[] numbers, int target) {\n        // Write your code here\n        return new int[]{-1, -1};\n    }\n}`
   },
 
   requiredStructure: {

@@ -29,7 +29,7 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    int longestConsecutiveRun(int[] numbers) {\n        // Write your code here\n        return 1;\n    }\n}`
+    code: `import java.util.*;\n\nclass Solution {\n    int longestConsecutiveRun(int[] numbers) {\n        // Write your code here\n        return 1;\n    }\n}`
   },
 
   requiredStructure: {

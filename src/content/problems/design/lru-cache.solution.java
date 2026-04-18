@@ -1,3 +1,5 @@
+import java.util.*;
+
 import java.util.HashMap;
 
 class LRUCache {

@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     ListNode middleNode(ListNode head) {
         ListNode slow = head;

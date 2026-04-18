@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     String removeKDigits(String num, int k) {
         StringBuilder stack = new StringBuilder();

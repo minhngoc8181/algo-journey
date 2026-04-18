@@ -1,10 +1,12 @@
+import java.util.*;
+
 class Solution {
     int sumSubarrayMins(int[] arr) {
         long MOD = 1000000007L;
         int n = arr.length;
         int[] left = new int[n];
         int[] right = new int[n];
-        java.util.Deque<Integer> stack = new java.util.ArrayDeque<>();
+        Deque<Integer> stack = new ArrayDeque<>();
 
         // Previous less element (strict <)
         for (int i = 0; i < n; i++) {

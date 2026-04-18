@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int getNth(ListNode head, int n) {
         if (n < 0) return -1;

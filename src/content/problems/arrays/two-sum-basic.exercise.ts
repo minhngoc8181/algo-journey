@@ -28,7 +28,7 @@ export default defineExercise({
 
   starter: {
     file: 'Solution.java',
-    code: `class Solution {
+    code: `import java.util.*;\n\nclass Solution {
     int[] twoSum(int[] numbers, int target) {
         // Write your code here
         return new int[]{-1, -1};

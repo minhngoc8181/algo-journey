@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int countOccurrences(int[] arr, int target) {
         int count = 0;

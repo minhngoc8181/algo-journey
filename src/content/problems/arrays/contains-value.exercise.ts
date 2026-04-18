@@ -28,7 +28,7 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    boolean containsValue(int[] numbers, int target) {\n        // Write your code here\n        return false;\n    }\n}`
+    code: `import java.util.*;\n\nclass Solution {\n    boolean containsValue(int[] numbers, int target) {\n        // Write your code here\n        return false;\n    }\n}`
   },
 
   requiredStructure: {

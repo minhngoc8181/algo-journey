@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int[] mergeSorted(int[] a, int[] b) {
         int[] result = new int[a.length + b.length];

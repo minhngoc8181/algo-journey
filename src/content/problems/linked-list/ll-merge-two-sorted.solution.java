@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     ListNode mergeTwoLists(ListNode list1, ListNode list2) {
         ListNode dummy = new ListNode(0);

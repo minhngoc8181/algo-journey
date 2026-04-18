@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int longestConsecutiveRun(int[] numbers) {
         if (numbers.length == 0) return 0;

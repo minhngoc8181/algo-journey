@@ -1,3 +1,5 @@
+import java.util.*;
+
 class FrequencyTracker {
     private int[] counts;
     private int[] frequencies;

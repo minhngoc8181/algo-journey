@@ -33,7 +33,7 @@ The array is guaranteed to contain a cycle accessible from index \`0\`.`,
   
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    int findCycleLength(int[] arr) {\n        // Write your code here\n        return 0;\n    }\n}`
+    code: `import java.util.*;\n\nclass Solution {\n    int findCycleLength(int[] arr) {\n        // Write your code here\n        return 0;\n    }\n}`
   },
 
   requiredStructure: {

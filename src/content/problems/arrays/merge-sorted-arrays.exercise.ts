@@ -13,7 +13,7 @@ export default defineExercise({
   statement: 'Given two sorted integer arrays `a` and `b`, merge them into a single sorted array and return it.',
   constraints: ['Both arrays are sorted in ascending order.', 'Either array may be empty.'],
   examples: [{ input: 'a = [1, 3, 5], b = [2, 4, 6]', output: '[1, 2, 3, 4, 5, 6]' }, { input: 'a = [1], b = []', output: '[1]' }],
-  starter: { file: 'Solution.java', code: `class Solution {\n    int[] mergeSorted(int[] a, int[] b) {\n        // Write your code here\n        return new int[0];\n    }\n}` },
+  starter: { file: 'Solution.java', code: `import java.util.*;\n\nclass Solution {\n    int[] mergeSorted(int[] a, int[] b) {\n        // Write your code here\n        return new int[0];\n    }\n}` },
   requiredStructure: { className: 'Solution', methodName: 'mergeSorted', signature: 'int[] mergeSorted(int[] a, int[] b)' },
   evaluation: { comparator: 'exact_json',
     javaGenerator: {

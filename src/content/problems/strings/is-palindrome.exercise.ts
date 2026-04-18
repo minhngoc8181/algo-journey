@@ -13,7 +13,7 @@ export default defineExercise({
   statement: 'Given a string `s`, return `true` if it reads the same forwards and backwards, `false` otherwise. Consider only lowercase letters.',
   constraints: ['The string contains only lowercase English letters.'],
   examples: [{ input: 's = "racecar"', output: 'true' }, { input: 's = "hello"', output: 'false' }],
-  starter: { file: 'Solution.java', code: `class Solution {\n    boolean isPalindrome(String s) {\n        // Write your code here\n        return false;\n    }\n}` },
+  starter: { file: 'Solution.java', code: `import java.util.*;\n\nclass Solution {\n    boolean isPalindrome(String s) {\n        // Write your code here\n        return false;\n    }\n}` },
   requiredStructure: { className: 'Solution', methodName: 'isPalindrome', signature: 'boolean isPalindrome(String s)' },
   evaluation: { comparator: 'exact_json' },
 });

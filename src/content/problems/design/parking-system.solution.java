@@ -1,3 +1,5 @@
+import java.util.*;
+
 class ParkingSystem {
     private int[] spaces;
 

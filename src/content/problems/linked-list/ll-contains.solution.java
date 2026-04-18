@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     boolean contains(ListNode head, int target) {
         ListNode current = head;

@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int maxElement(int[] arr) {
         int max = arr[0];

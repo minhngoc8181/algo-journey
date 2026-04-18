@@ -29,7 +29,7 @@ export default defineExercise({
 
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    String removeKDigits(String num, int k) {\n        // Write your code here\n        return "";\n    }\n}`,
+    code: `import java.util.*;\n\nclass Solution {\n    String removeKDigits(String num, int k) {\n        // Write your code here\n        return "";\n    }\n}`,
   },
 
   requiredStructure: {

@@ -28,7 +28,7 @@ export default defineExercise({
 
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    int[] dailyTemperatures(int[] temperatures) {\n        // Write your code here\n        return new int[0];\n    }\n}`,
+    code: `import java.util.*;\n\nclass Solution {\n    int[] dailyTemperatures(int[] temperatures) {\n        // Write your code here\n        return new int[0];\n    }\n}`,
   },
 
   requiredStructure: {

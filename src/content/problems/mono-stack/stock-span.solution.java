@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int[] stockSpan(int[] prices) {
         int n = prices.length;

@@ -13,7 +13,7 @@ export default defineExercise({
   statement: 'Given an integer array `arr`, return `true` if any value appears at least twice, and `false` if every element is distinct.',
   constraints: ['1 ≤ arr.length ≤ 10000'],
   examples: [{ input: 'arr = [1, 2, 3, 1]', output: 'true' }, { input: 'arr = [1, 2, 3, 4]', output: 'false' }],
-  starter: { file: 'Solution.java', code: `class Solution {\n    boolean containsDuplicate(int[] arr) {\n        // Write your code here\n        return false;\n    }\n}` },
+  starter: { file: 'Solution.java', code: `import java.util.*;\n\nclass Solution {\n    boolean containsDuplicate(int[] arr) {\n        // Write your code here\n        return false;\n    }\n}` },
   requiredStructure: { className: 'Solution', methodName: 'containsDuplicate', signature: 'boolean containsDuplicate(int[] arr)' },
   evaluation: { comparator: 'exact_json',
     javaGenerator: {

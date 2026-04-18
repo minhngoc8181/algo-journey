@@ -111,7 +111,15 @@ async function compileFiles(files, mainClass) {
     message:  d.message,
   }));
 
-  const compileOk = compiler.compile();
+  let compileOk = false;
+  let wasmCrashError = null;
+  try {
+    compileOk = compiler.compile();
+  } catch (err) {
+    console.warn('[compile-worker] TeaVM compile() crashed:', err);
+    wasmCrashError = err;
+    compileOk = false;
+  }
   
   if (reg && typeof reg.destroy === 'function') {
     reg.destroy();
@@ -119,20 +127,52 @@ async function compileFiles(files, mainClass) {
     reg();
   }
 
+  // If we had a fatal WASM crash, their internal state is likely corrupt.
+  if (wasmCrashError) {
+    compiler = null;
+  }
+
   if (!compileOk) {
+    // If it crashed but we already collected syntax errors, show those to the user!
+    if (diagnostics.some(d => d.severity === 'error')) {
+       return { cmd: 'compile-error', diagnostics };
+    }
+    if (wasmCrashError) {
+       throw wasmCrashError; // throw to the outer catch which sends cmd: 'error'
+    }
     return { cmd: 'compile-error', diagnostics };
   }
 
   // Generate WebAssembly output
-  const wasmOk = compiler.generateWebAssembly({ outputName: 'app', mainClass });
+  let wasmOk = false;
+  try {
+    wasmOk = compiler.generateWebAssembly({ outputName: 'app', mainClass });
+  } catch (err) {
+    console.warn('[compile-worker] TeaVM generateWebAssembly() crashed:', err);
+    compiler = null;
+    wasmCrashError = err;
+  }
+
   if (!wasmOk) {
+    if (diagnostics.some(d => d.severity === 'error')) {
+       return { cmd: 'compile-error', diagnostics };
+    }
+    if (wasmCrashError) {
+       throw wasmCrashError;
+    }
     return { cmd: 'compile-error', diagnostics };
   }
 
   let wasmBuffer = null;
-  let wasmBytes = compiler.getWebAssemblyOutputFile('app.wasm');
-  if (wasmBytes) {
-    wasmBuffer = wasmBytes.buffer.slice(wasmBytes.byteOffset, wasmBytes.byteOffset + wasmBytes.byteLength);
+  try {
+    let wasmBytes = compiler.getWebAssemblyOutputFile('app.wasm');
+    if (wasmBytes) {
+      wasmBuffer = wasmBytes.buffer.slice(wasmBytes.byteOffset, wasmBytes.byteOffset + wasmBytes.byteLength);
+    }
+  } catch (err) {
+    compiler = null;
+    throw err;
   }
+  
   return { cmd: 'compiled', wasmBuffer, diagnostics };
 }

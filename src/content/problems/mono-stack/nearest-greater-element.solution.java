@@ -1,3 +1,5 @@
+import java.util.*;
+
 class Solution {
     int[] nextGreaterElement(int[] nums) {
         int n = nums.length;

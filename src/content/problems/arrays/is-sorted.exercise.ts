@@ -28,7 +28,7 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    boolean isSortedAscending(int[] numbers) {\n        // Write your code here\n        return true;\n    }\n}`
+    code: `import java.util.*;\n\nclass Solution {\n    boolean isSortedAscending(int[] numbers) {\n        // Write your code here\n        return true;\n    }\n}`
   },
 
   requiredStructure: {

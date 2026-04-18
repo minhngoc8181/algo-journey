@@ -28,7 +28,7 @@ export default defineExercise({
   
   starter: {
     file: 'Solution.java',
-    code: `class Solution {\n    int[] buildPrefixSum(int[] numbers) {\n        // Write your code here\n        return new int[0];\n    }\n}`
+    code: `import java.util.*;\n\nclass Solution {\n    int[] buildPrefixSum(int[] numbers) {\n        // Write your code here\n        return new int[0];\n    }\n}`
   },
 
   requiredStructure: {
