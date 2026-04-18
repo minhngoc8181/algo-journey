@@ -15,8 +15,7 @@ export default defineExercise({
   learningGoals: ['Implement a robust Command Pattern handling maps', 'Differentiate between state-snapshots versus operation-deltas for undo strategies'],
   statement: `You are creating a shopping cart that supports adding, removing items, and maintains an undo/redo history.
 
-Implement the \`ShoppingCart\` class:
-- \`ShoppingCart()\` Initializes an empty cart.
+Implement the \`ShoppingCart\` class:\n\n- \`ShoppingCart()\` Initializes an empty cart.
 - \`void addItem(String item, int quantity)\` Adds the specified \`quantity\` to the \`item\` in the cart. If the item doesn't exist, it creates it with that \`quantity\`. Saves this operation to the history. Clear any forward (redo) history.
 - \`void removeItem(String item, int quantity)\` Subtracts the specified \`quantity\` from the \`item\`. If the item's quantity drops to \`0\` or below, the item is completely removed from the cart. Does nothing if the item is not currently in the cart. Saves this operation to the history. Clear any forward (redo) history.
 - \`void undo()\` Reverts the last \`addItem\` or \`removeItem\` operation. If there is no operation to undo, does nothing.

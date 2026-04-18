@@ -15,8 +15,7 @@ export default defineExercise({
   learningGoals: ['Model limited resources in an OOP design', 'Work with class state variables to track available slots'],
   statement: `Design a parking system for a parking lot. The parking lot has three kinds of parking spaces: big, medium, and small, with a fixed number of slots for each size.
 
-Implement the \`ParkingSystem\` class:
-- \`ParkingSystem(int big, int medium, int small)\` Initializes object of the \`ParkingSystem\` class. The number of slots for each parking space are given as part of the constructor.
+Implement the \`ParkingSystem\` class:\n\n- \`ParkingSystem(int big, int medium, int small)\` Initializes object of the \`ParkingSystem\` class. The number of slots for each parking space are given as part of the constructor.
 - \`boolean addCar(int carType)\` Checks whether there is a parking space of \`carType\` for the car that wants to get into the parking lot. \`carType\` can be of three kinds: \`1\`, \`2\`, or \`3\`, which represent big, medium, and small, respectively. A car can only park in a parking space of its \`carType\`. If there is no space available, return \`false\`, else park the car in that size space and return \`true\`.`,
   constraints: [
     '\`0 <= big, medium, small <= 1000\`',

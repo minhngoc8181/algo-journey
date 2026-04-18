@@ -15,8 +15,7 @@ export default defineExercise({
   learningGoals: ['Maintain bi-directional tracking of states', 'Use multiple hash maps or arrays to answer queries in O(1) time'],
   statement: `Design a data structure that keeps track of the values in it and answers some queries regarding their frequencies.
 
-Implement the \`FrequencyTracker\` class:
-- \`FrequencyTracker()\` Initializes the \`FrequencyTracker\` object with an empty array initially.
+Implement the \`FrequencyTracker\` class:\n\n- \`FrequencyTracker()\` Initializes the \`FrequencyTracker\` object with an empty array initially.
 - \`void add(int number)\` Adds \`number\` to the data structure.
 - \`void deleteOne(int number)\` Deletes **one** occurrence of \`number\` from the data structure. The data structure **may not contain** \`number\`, and in this case nothing is deleted.
 - \`boolean hasFrequency(int frequency)\` Returns \`true\` if there is a number in the data structure that occurs \`frequency\` number of times, otherwise, it returns \`false\`.`,

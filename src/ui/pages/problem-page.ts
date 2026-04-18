@@ -8,6 +8,7 @@ import { progressStore } from '../../progress/progress-store';
 import { router } from '../../app/router';
 import { javaRun } from '../../runner/java-runner';
 import type { Exercise, RunResult, TestResult } from '../../shared/types';
+import { marked } from 'marked';
 
 // Monaco editor instance reference
 let editorInstance: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
@@ -179,7 +180,8 @@ function createStatementPanel(exercise: Exercise): HTMLElement {
 
   // Statement
   const statement = el('div', { className: 'problem-statement' });
-  statement.appendChild(el('p', { html: formatStatement(exercise.statement) }));
+  const mdContent = el('div', { className: 'markdown-content', html: formatStatement(exercise.statement) });
+  statement.appendChild(mdContent);
 
   // Examples
   if (exercise.examples.length > 0) {
@@ -204,12 +206,12 @@ function createStatementPanel(exercise: Exercise): HTMLElement {
     }
   }
 
-  // Constraints
+    // Constraints
   if (exercise.constraints.length > 0) {
     statement.appendChild(el('h3', { text: 'Constraints' }));
     const constraintsList = el('ul', { className: 'constraints-list' });
     for (const c of exercise.constraints) {
-      constraintsList.appendChild(el('li', { html: formatStatement(c) }));
+      constraintsList.appendChild(el('li', { html: formatStatement(c, true) }));
     }
     statement.appendChild(constraintsList);
   }
@@ -816,9 +818,16 @@ function createExampleRow(label: string, value: string): HTMLElement {
   ]});
 }
 
-function formatStatement(text: string): string {
-  // Simple markdown-like: backtick to <code>
-  return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+function formatStatement(text: string, inline: boolean = false): string {
+  try {
+    if (inline) {
+      return marked.parseInline(text) as string;
+    }
+    return marked.parse(text) as string;
+  } catch (e) {
+    // Graceful fallback
+    return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
 }
 
 export function setEditorValue(code: string): void {

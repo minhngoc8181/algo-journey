@@ -15,8 +15,7 @@ export default defineExercise({
   learningGoals: ['Understand the Command Pattern or State Snapshot pattern', 'Manage parallel stacks for undo and redo history'],
   statement: `Design a simple text editor that supports adding text, deleting text, and undo/redo operations.
 
-Implement the \`TextEditor\` class:
-- \`TextEditor()\` Initializes the object with an empty string \`""\`.
+Implement the \`TextEditor\` class:\n\n- \`TextEditor()\` Initializes the object with an empty string \`""\`.
 - \`void addText(String text)\` Appends \`text\` to the current text.
 - \`void deleteText(int k)\` Deletes the last \`k\` characters from the current text. If the text has fewer than \`k\` characters, it clears the entire text.
 - \`void undo()\` Reverts the last \`addText\` or \`deleteText\` operation. If there are no operations to undo, does nothing.

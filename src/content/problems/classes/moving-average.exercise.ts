@@ -15,8 +15,7 @@ export default defineExercise({
   learningGoals: ['Design a class with internal state', 'Use a queue to represent a sliding window'],
   statement: `Given a stream of integers and a window size, calculate the moving average of all integers in the sliding window.
 
-Implement the \`MovingAverage\` class:
-- \`MovingAverage(int size)\` Initializes the object with the size of the window \`size\`.
+Implement the \`MovingAverage\` class:\n\n- \`MovingAverage(int size)\` Initializes the object with the size of the window \`size\`.
 - \`double next(int val)\` Returns the moving average of the last \`size\` values of the stream.`,
   constraints: [
     'The parameter \`size\` will be at least 1.',

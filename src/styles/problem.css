@@ -67,6 +67,7 @@
   font-size: var(--text-sm);
   color: var(--color-text-primary);
   word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .example-block__explanation {

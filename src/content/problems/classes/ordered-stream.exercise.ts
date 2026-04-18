@@ -17,8 +17,7 @@ export default defineExercise({
 
 Design a stream that returns the values in increasing order of their IDs by returning a chunk (list) of values after each insertion. The concatenation of all the chunks should result in a list of the sorted values.
 
-Implement the \`OrderedStream\` class:
-- \`OrderedStream(int n)\` Constructs the stream to take \`n\` values.
+Implement the \`OrderedStream\` class:\n\n- \`OrderedStream(int n)\` Constructs the stream to take \`n\` values.
 - \`List<String> insert(int idKey, String value)\` Inserts the pair \`(idKey, value)\` into the stream, then returns the largest possible chunk of currently inserted values that appear next in the order.`,
   constraints: [
     '\`1 <= n <= 1000\`',

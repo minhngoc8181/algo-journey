@@ -15,8 +15,7 @@ export default defineExercise({
   learningGoals: ['Implement the Command Design Pattern with concrete operations', 'Use stacks or lists to track history bounds for undo and redo operations'],
   statement: `You are simulating a command-line interface that modifies a single integer \`value\` that starts at \`0\`.
 
-Implement the \`CommandHistory\` class:
-- \`CommandHistory()\` Initializes the system with the value \`0\`.
+Implement the \`CommandHistory\` class:\n\n- \`CommandHistory()\` Initializes the system with the value \`0\`.
 - \`void add(int amount)\` Adds \`amount\` to the current value. Saves this operation to the history. Clear any forward (redo) history.
 - \`void subtract(int amount)\` Subtracts \`amount\` from the current value. Saves this operation to the history. Clear any forward (redo) history.
 - \`void undo()\` Undoes the last \`add\` or \`subtract\` operation. If there is no operation to undo, does nothing.
