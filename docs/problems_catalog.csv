@@ -42,6 +42,24 @@ binary-search,"Binary Search",433,divide-and-conquer;cse201
 simple-counter,"Simple Counter",436,constructor;state;cse201
 min-stack,"Min Stack",437,stack;design;cse201
 queue-using-stacks,"Implement Queue using Stacks",438,stack;design;queue;cse201
+moving-average,"Moving Average from Data Stream",439,queue;design;sliding-window;cse201
+recent-counter,"Number of Recent Calls",440,queue;design;data-stream;cse201
+parking-system,"Design Parking System",441,design;simulation;cse201
+browser-history,"Design Browser History",442,array;stack;design;doubly-linked-list;cse201
+ordered-stream,"Design an Ordered Stream",443,array;design;data-stream;cse201
+front-middle-back-queue,"Design Front Middle Back Queue",444,array;linked-list;design;queue;cse201
+frequency-tracker,"Frequency Tracker",445,hash-table;design;cse201
+number-containers,"Design a Number Container System",446,hash-table;design;heap;tree;cse201
+lru-cache,"LRU Cache",447,hash-table;linked-list;design;doubly-linked-list;cse201
+text-editor-undo-redo,"Text Editor with Undo and Redo",448,stack;design;command-pattern;cse201
+command-history,"Command History Simulator",449,stack;design;command-pattern;cse201
+shopping-cart-undo-redo,"Shopping Cart with Undo and Redo",450,hash-table;stack;design;command-pattern;cse201
+ll-contains,"Linked List Contains",460,linked-list;traversal;cse201
+ll-get-nth,"Get Nth Node",461,linked-list;traversal;index;cse201
+ll-reverse,"Reverse Linked List",462,linked-list;pointer-manipulation;cse201
+ll-middle-node,"Middle of Linked List",463,linked-list;slow-fast-pointer;two-pointers;cse201
+ll-merge-two-sorted,"Merge Two Sorted Lists",464,linked-list;merge;sorting;cse201
+ll-has-cycle,"Linked List Cycle",465,linked-list;floyd-cycle;slow-fast-pointer;cse201
 contains-duplicate,"Contains Duplicate",1000,hash-set
 two-sum-basic,"Two Sum Basic",1000,array-traversal;hash-map
 fizz-buzz,"FizzBuzz",1000,conditionals;modulo

@@ -15,7 +15,7 @@ export type Topic =
   | 'searching'
   | 'sorting'
   | 'math'
-  | 'classes'
+  | 'design'
   | 'collections'
   | 'linked-lists';
 
