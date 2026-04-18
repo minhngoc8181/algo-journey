@@ -78,6 +78,16 @@ function applySplitRatio(layout: HTMLElement, leftPct: number): void {
   const clamped = Math.min(80, Math.max(20, leftPct));
   const rightPct = 100 - clamped;
   layout.style.gridTemplateColumns = `${clamped}fr 5px ${rightPct}fr`;
+
+  // Dynamically align the floating notch with the resizer
+  const appHeader = document.querySelector('.app-header') as HTMLElement;
+  const isProblemMode = document.querySelector('.app-layout--problem');
+  // Only adjust if the notch is active (problem mode on desktop)
+  if (appHeader && isProblemMode && window.innerWidth >= 769) {
+    appHeader.style.left = `calc(${clamped}vw + 2.5px)`;
+  } else if (appHeader) {
+    appHeader.style.left = '';
+  }
 }
 
 /** Wire up mouse drag resizing on the split resizer handle */
@@ -155,19 +165,24 @@ function createStatementPanel(exercise: Exercise): HTMLElement {
   const titleEl = el('h1', {
     className: 'font-semibold',
     text: exercise.title,
-    attrs: { style: 'font-size: var(--text-xl); margin: 0;' },
+    attrs: { style: 'font-size: var(--text-base); margin: 0;' },
   });
   const diffBadge = el('span', {
     className: `difficulty-badge difficulty-${exercise.difficulty}`,
     text: exercise.difficulty.charAt(0).toUpperCase() + exercise.difficulty.slice(1),
   });
   const headerRow = el('div', {
-    attrs: { style: 'display: flex; align-items: center; gap: var(--space-3);' },
+    attrs: { style: 'display: flex; align-items: center; justify-content: center; gap: var(--space-3);' },
     children: [titleEl, diffBadge],
   });
   const header = el('div', {
     className: 'panel__header',
-    children: [backBtn, headerRow],
+    // Center the title, and absolutely position the back button on the left
+    attrs: { style: 'position: relative; justify-content: center;' },
+    children: [
+      el('div', { attrs: { style: 'position: absolute; left: var(--space-4); display: flex; align-items: center;' }, children: [backBtn] }), 
+      headerRow
+    ],
   });
 
   // Tabs
@@ -269,13 +284,17 @@ function createEditorPanel(exercise: Exercise, _starterCode: string): HTMLElemen
 
   // Editor header
   const fileName = exercise.editableFiles[0]?.path ?? 'Solution.java';
-  const editorHeader = el('div', { className: 'panel__header', children: [
-    el('span', { className: 'panel__header-title font-mono', text: fileName }),
-    el('span', {
-      className: 'tag',
-      text: exercise.mode.replace('_', ' '),
-      attrs: { style: 'text-transform: capitalize;' },
-    }),
+  const editorHeader = el('div', { 
+    className: 'panel__header', 
+    // Center the filename and tag to stay balanced
+    attrs: { style: 'justify-content: center; gap: var(--space-4);' },
+    children: [
+      el('span', { className: 'panel__header-title font-mono', text: fileName }),
+      el('span', {
+        className: 'tag',
+        text: exercise.mode.replace('_implementation', '').replace('_', ' '),
+        attrs: { style: 'text-transform: capitalize;' },
+      }),
   ]});
 
   // Editor container
@@ -873,5 +892,11 @@ export function disposeProblemPage(): void {
   if (editorInstance) {
     editorInstance.dispose();
     editorInstance = null;
+  }
+  
+  // Clean up dynamic header positioning
+  const appHeader = document.querySelector('.app-header') as HTMLElement;
+  if (appHeader) {
+    appHeader.style.left = '';
   }
 }

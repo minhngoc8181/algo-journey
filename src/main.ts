@@ -26,6 +26,13 @@ async function main(): Promise<void> {
     // Clean up previous page
     disposeProblemPage();
 
+    // Toggle compact header mode for problem pages
+    if (route.page === 'problem') {
+      container.classList.add('app-layout--problem');
+    } else {
+      container.classList.remove('app-layout--problem');
+    }
+
     if (route.page === 'problem' && route.slug) {
       await renderProblemPage(contentArea, route.slug);
     } else {

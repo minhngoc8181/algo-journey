@@ -68,6 +68,86 @@
   padding: 0;
 }
 
+/* ══════════════════════════════════════════════════════════
+   Compact Header Desktop Notch — Problem Page Mode
+   Header attaches to the top center like an iOS notch.
+   ══════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  .app-layout--problem {
+    /* Layout takes full screen, header floats above */
+    position: relative;
+  }
+
+  .app-layout--problem .app-header {
+    /* Float above content */
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-modal);
+
+    /* Notch shape */
+    width: auto;
+    min-width: 240px;
+    height: 44px;
+    padding: 0 var(--space-5);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+
+    /* Glassmorphism */
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-top: none;
+    box-shadow: var(--shadow-md), 0 4px 12px hsla(0, 0%, 0%, 0.1);
+
+    /* Spread logo and theme toggle */
+    justify-content: space-between;
+
+    /* Smooth entrance */
+    animation: headerNotchIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .app-layout--problem .app-header .app-logo {
+    font-size: var(--text-base);
+    gap: var(--space-3);
+  }
+
+  .app-layout--problem .app-header .app-logo-icon {
+    width: 24px;
+    height: 24px;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
+  }
+
+  .app-layout--problem .app-header .btn-icon {
+    padding: var(--space-1);
+    margin-left: var(--space-4);
+  }
+
+  /* Remove header space — content starts at top */
+  .app-layout--problem .app-main {
+    padding-top: 0;
+  }
+
+  /* Split layout uses full viewport */
+  .app-layout--problem .split-layout {
+    height: 100vh;
+  }
+
+  @keyframes headerNotchIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+}
+
 /* ── Page Header ── */
 .page-header {
   margin-bottom: var(--space-8);
@@ -188,7 +268,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
+  height: 44px;
+  padding: 0 var(--space-4);
   border-bottom: 1px solid var(--color-border-subtle);
   background: var(--color-bg-secondary);
   flex-shrink: 0;
@@ -247,23 +328,89 @@
     padding: var(--space-4);
   }
 
+  /* ── Problem page: stacked, scrollable layout ── */
   .split-layout {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto 5px auto;
-  }
-
-  .split-resizer {
-    width: auto;
-    height: 5px;
-    cursor: row-resize;
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: calc(100vh - var(--header-height));
+    overflow: visible !important;
   }
 
   .split-layout__left {
     border-right: none;
     border-bottom: 1px solid var(--color-border-subtle);
+    overflow: visible !important;
+    max-height: none !important;
+    min-height: 0;
+  }
+
+  .split-layout__right {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0;
+  }
+
+  /* Hide horizontal resizer on mobile — panels stack vertically */
+  .split-resizer {
+    display: none;
+  }
+
+  /* Editor section: give adequate fixed height */
+  .editor-section {
+    flex: none !important;
+    height: 350px !important;
+    min-height: 300px !important;
+    overflow: hidden !important;
+  }
+
+  /* Editor container itself */
+  .editor-container {
+    min-height: 250px !important;
+  }
+
+  /* Hide vertical resizer on mobile too */
+  .split-resizer-v {
+    display: none;
+  }
+
+  /* Result section: auto height, scrollable content */
+  .result-section {
+    flex: none !important;
+    height: auto !important;
+    min-height: 200px;
+    overflow: visible !important;
+  }
+
+  /* Result body scrolls normally within page flow */
+  .result-section .panel__body {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Panel body: no overflow clipping on mobile */
+  .panel__body {
+    overflow: visible !important;
+    max-height: none !important;
   }
 
   .page-title {
     font-size: var(--text-2xl);
+  }
+
+  /* Smaller header padding */
+  .app-header {
+    padding: 0 var(--space-3);
+  }
+
+  .panel__header {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* Run controls: wrap buttons on very narrow screens */
+  .run-controls {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-2);
   }
 }
