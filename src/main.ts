@@ -48,6 +48,7 @@ async function main(): Promise<void> {
   // Exposes window.__algoDev for use by /auto_run_test.js
   if (import.meta.env.DEV) {
     const { getSolution, getAllCatalogEntries } = await import('./content/_loader');
+    const { progressStore } = await import('./progress/progress-store');
     (window as any).__algoDev = {
       /** All registered problems with topic/difficulty info */
       getCatalog: () => getAllCatalogEntries(),
@@ -55,6 +56,8 @@ async function main(): Promise<void> {
       getSolution: (id: string) => getSolution(id),
       /** Set the current Monaco editor code */
       setCode: (code: string) => setEditorValue(code),
+      /** Get all progress records from IndexedDB */
+      getAllProgress: () => progressStore.getAllProgress(),
       /** Navigate to a problem or catalog */
       navigate: (slug?: string) => {
         window.location.hash = slug ? `#/problem/${slug}` : '#/';

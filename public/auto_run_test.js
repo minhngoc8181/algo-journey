@@ -5,8 +5,11 @@
  * HOW TO RUN (from browser DevTools Console):
  *   1. Load the script (once):
  *      import('/auto_run_test.js')
- *   2. Run the test (whenever you want):
- *      auto_run_test()
+ *   2. Run all tests:
+ *      auto_run_test()         — run every problem
+ *      auto_run_test(true)     — skip already-accepted problems (checks app progress)
+ *   3. Test current problem with solution:
+ *      auto_run_solution()     — loads solution for current page & submits
  *
  * REQUIRES:  npm run dev  (Vite dev server)
  * The app exposes window.__algoDev automatically in dev mode.
@@ -114,16 +117,31 @@ window.auto_run_test = async function (onlyFailing = false) {
     localStorage.removeItem(STORE_KEY);
   }
 
-  const okIds = report.filter(r => r.status === '🟢 OK' || r.status === '🟡 WEAK_TESTS').map(r => r.id);
+  // When onlyFailing: skip problems that are 'accepted' in app progress
+  // This catches ALL failures — manual submissions, auto-test runs, etc.
+  let acceptedIds = new Set();
+  if (onlyFailing) {
+    try {
+      const allProgress = await api.getAllProgress();
+      acceptedIds = new Set(
+        allProgress.filter(p => p.status === 'accepted').map(p => p.problemId)
+      );
+    } catch (e) {
+      console.warn('⚠️ Could not read app progress, falling back to report-based skip');
+      // Fallback: use report
+      report.filter(r => r.status === '🟢 OK' || r.status === '🟡 WEAK_TESTS')
+        .forEach(r => acceptedIds.add(r.id));
+    }
+  }
 
   // Filter and limit
   const problems = catalog
     .filter(p => !CFG.SKIP_SLUGS.includes(p.id))
-    .filter(p => !onlyFailing || !okIds.includes(p.id))
+    .filter(p => !onlyFailing || !acceptedIds.has(p.id))
     .slice(0, CFG.MAX_PROBLEMS);
 
   if (onlyFailing) {
-    console.log(`⏭️ Skipping ${okIds.length} already OK/WEAK problems.`);
+    console.log(`⏭️ Skipping ${acceptedIds.size} accepted problems.`);
   }
   console.log(`📋 Found ${catalog.length} problems, testing ${problems.length}…\n`);
 
@@ -255,6 +273,50 @@ window.auto_run_test = async function (onlyFailing = false) {
   } catch (_) { }
 
   return report;
+};
+
+// ── Quick solution runner for current problem ─────────────────────────
+
+window.auto_run_solution = async function () {
+  const api = getApi();
+
+  // Extract current problem slug from hash
+  const hashMatch = window.location.hash.match(/#\/problem\/(.+)/);
+  if (!hashMatch) {
+    console.error('❌ Not on a problem page. Navigate to a problem first.');
+    return;
+  }
+  const slug = hashMatch[1];
+  console.log(`%c🔧 Loading solution for "${slug}"…`, 'color:#6ee7b7;font-size:13px;font-weight:bold');
+
+  // Load solution
+  let solution = null;
+  try {
+    solution = await api.getSolution(slug);
+  } catch (e) {
+    console.error(`❌ Could not load solution for "${slug}":`, e);
+    return;
+  }
+  if (!solution) {
+    console.error(`❌ No reference solution found for "${slug}"`);
+    return;
+  }
+
+  // Set code and submit
+  api.setCode(solution);
+  await sleep(300);
+  clickBtn('submit-btn');
+  await waitForResult();
+  switchToResultTab();
+  await sleep(200);
+
+  const score = readScore();
+  if (score) {
+    const icon = score.passed === score.total ? '✅' : '❌';
+    console.log(`${icon} Solution result: ${score.passed}/${score.total}`);
+  } else {
+    console.warn('⚠️ Could not read score. Check the Test Result tab manually.');
+  }
 };
 
 // Initialize window.__autoTestReport from persistent storage immediately on script load
