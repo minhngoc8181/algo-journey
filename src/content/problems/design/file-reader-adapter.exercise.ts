@@ -117,11 +117,13 @@ class DataImportService {
             int opsCount = (i < 5) ? 10 : 50;
             DataImportService obj = new DataImportService();
 
-            boolean pass = true;
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int type = rng.nextInt(3); // 0: txt, 1: json adapter, 2: null
                 String fileName = "file_" + rng.nextInt(100) + (type == 0 ? ".txt" : ".json");
                 
@@ -138,14 +140,30 @@ class DataImportService {
 
                 String actualAns = obj.importData(reader, fileName);
 
-                if (!expectedAns.equals(actualAns)) {
-                    pass = false;
-                    firstMismatchAct = "[importData -> " + actualAns + "]";
-                    firstMismatchExp = "[importData -> " + expectedAns + "]";
-                    break;
+                expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|test-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (actStr.length() > 2000) actStr = actStr.substring(0, 2000) + "...";
+                if (expStr.length() > 2000) expStr = expStr.substring(0, 2000) + "...";
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

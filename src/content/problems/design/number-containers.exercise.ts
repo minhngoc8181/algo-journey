@@ -85,11 +85,13 @@ nc.find(10); // Number 10 is at the indices 2, 3, and 5. The smallest index that
             java.util.Map<Integer, Integer> indexToNumber = new java.util.HashMap<>();
             java.util.Map<Integer, java.util.TreeSet<Integer>> numberToIndices = new java.util.HashMap<>();
             
-            boolean pass = true;
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int type = rng.nextInt(3);
                 int num = rng.nextInt(100) + 1; // 1-100 to increase collision frequency
                 int idx = rng.nextInt(500) + 1;
@@ -120,15 +122,31 @@ nc.find(10); // Number 10 is at the indices 2, 3, and 5. The smallest index that
                     // Track actual
                     int actualAns = obj.find(num);
                     
-                    if (expectedAns != actualAns) {
-                        pass = false;
-                        firstMismatchAct = "[find " + num + " -> " + actualAns + "]";
-                        firstMismatchExp = "[find " + num + " -> " + expectedAns + "]";
-                        break;
-                    }
+                    expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
+                }
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|test-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (actStr.length() > 2000) actStr = actStr.substring(0, 2000) + "...";
+                if (expStr.length() > 2000) expStr = expStr.substring(0, 2000) + "...";
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

@@ -89,11 +89,13 @@ You must implement a solution with \`O(1)\` time complexity for each function.`,
             java.util.Stack<Integer> valStack = new java.util.Stack<>();
             java.util.Stack<Integer> minStack = new java.util.Stack<>();
 
-            boolean pass = true;
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int opType = valStack.isEmpty() ? 0 : rng.nextInt(4);
                 if (opType == 0) { // push
                     int val = rng.nextInt(1000) - 500;
@@ -109,24 +111,36 @@ You must implement a solution with \`O(1)\` time complexity for each function.`,
                 } else if (opType == 2) { // top
                     int actualTop = obj.top();
                     int expectedTop = valStack.peek();
-                    if (actualTop != expectedTop) {
-                        pass = false;
-                        firstMismatchAct = "[top -> " + actualTop + "]";
-                        firstMismatchExp = "[top -> " + expectedTop + "]";
-                        break;
-                    }
+                    expTrace.add(expectedTop);
+                    actTrace.add(actualTop);
                 } else { // getMin
                     int actualMin = obj.getMin();
                     int expectedMin = minStack.peek();
-                    if (actualMin != expectedMin) {
-                        pass = false;
-                        firstMismatchAct = "[getMin -> " + actualMin + "]";
-                        firstMismatchExp = "[getMin -> " + expectedMin + "]";
-                        break;
-                    }
+                    expTrace.add(expectedMin);
+                    actTrace.add(actualMin);
+                }
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|stress-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (actStr.length() > 2000) actStr = actStr.substring(0, 2000) + "...";
+                if (expStr.length() > 2000) expStr = expStr.substring(0, 2000) + "...";
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|stress-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

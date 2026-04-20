@@ -94,8 +94,15 @@ function cleanResults() {
 }
 
 // 3. Chạy đè reference code và xác thực 100% Pass
-function verifyRefs() {
-  const problems = getProblems();
+function verifyRefs(targetSlugs: string[] = []) {
+  let problems = getProblems();
+  if (targetSlugs && targetSlugs.length > 0) {
+    problems = problems.filter(p => targetSlugs.includes(p.slug));
+    if (problems.length === 0) {
+      console.log(`No problems matched the provided slugs: ${targetSlugs.join(', ')}`);
+      return;
+    }
+  }
   console.log(`Verifying Reference Solutions for ${problems.length} problems...`);
   
   const report = { total: problems.length, perfect: 0, failedOrCrashed: 0, details: [] as any[] };
@@ -106,18 +113,39 @@ function verifyRefs() {
     let stats = { passed: 0, failed: 0, errors: 0 };
     
     try {
-      logs = execSync('cmd /c grade-ref.bat', { cwd: prob.path, stdio: 'pipe', maxBuffer: 10 * 1024 * 1024 }).toString();
+      logs = execSync('cmd /c grade-ref.bat', { cwd: prob.path, stdio: 'pipe', maxBuffer: 100 * 1024 * 1024 }).toString();
     } catch (err: any) {
       logs = (err.stdout?.toString() || '') + '\n' + (err.stderr?.toString() || '');
       status = 'COMPILE_OR_CRASH_ERROR';
     }
     
     let suspiciousTestWarning = '';
+    let samples: any[] = [];
       
     const jsonPath = path.join(prob.path, 'results.json');
     if (fs.existsSync(jsonPath)) {
       try {
         const resultJSON = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        
+        if (resultJSON.results && resultJSON.results.length > 0) {
+            const results = resultJSON.results;
+            const indices = new Set<number>();
+            indices.add(0);
+            if (results.length > 1) {
+                indices.add(Math.floor(results.length / 2));
+                indices.add(results.length - 1);
+            }
+            
+            for (const idx of Array.from(indices).sort((a, b) => a - b)) {
+                const res = results[idx] as any;
+                let exp = res.expected ? res.expected.toString().trim() : '';
+                let act = res.actual ? res.actual.toString().trim() : '';
+                if (exp.length > 200) exp = exp.substring(0, 200) + '...';
+                if (act.length > 200) act = act.substring(0, 200) + '...';
+                samples.push({ index: idx, actual: act, expected: exp });
+            }
+        }
+
         const expectedCounts = new Map<string, number>();
         let isAllBoolean = true;
 
@@ -172,7 +200,7 @@ function verifyRefs() {
        console.log(`  -> ⚠️ WARNING: ${suspiciousTestWarning}`);
     }
     
-    report.details.push({ slug: prob.slug, status, stats, suspiciousTestWarning });
+    report.details.push({ slug: prob.slug, status, stats, samples, suspiciousTestWarning });
   }
   
   const reportPath = path.join(pcJudgeDir, '3_report_ref.json');
@@ -185,11 +213,15 @@ function verifyRefs() {
 const args = process.argv.slice(2);
 if (args.includes('run-starter')) runStarter();
 else if (args.includes('clean')) cleanResults();
-else if (args.includes('verify-refs')) verifyRefs();
+else if (args.length > 0 && args[0] === 'verify-refs') {
+  let targetSlugs: string[] = [];
+  if (args[1]) targetSlugs = args[1].split(';').map(s => s.trim()).filter(Boolean);
+  verifyRefs(targetSlugs);
+}
 else {
   console.log('Usage: npm run pc-judge:verify <command>');
   console.log('\nCommands:');
   console.log('  run-starter   Chạy grade.bat (chạy Starter Code sinh viên) và in ra JSON báo cáo 1_report_starter.json');
   console.log('  clean         Xóa file .class và results.json trên toàn bộ các thư mục bài.');
-  console.log('  verify-refs   Copy đè đáp án mẫu _solution_ref.java, chạy, và xác thực PASS toàn bộ test case. (3_report_ref.json)');
+  console.log('  verify-refs [slugs]  Copy đè đáp án mẫu _solution_ref.java, chạy, và xác định PASS toàn bộ test case. Điền kèm danh sách (slug1;slug2) để test riêng.');
 }

@@ -117,11 +117,13 @@ class Course {
 
             int currentPolicy = -1; // -1: none, 0: avg, 1: highest, 2: pf
 
-            boolean pass = true;
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int type = rng.nextInt(2);
 
                 if (type == 0) { // setPolicy
@@ -158,15 +160,29 @@ class Course {
 
                     String actualAns = obj.grade(scores);
 
-                    if (!expectedAns.equals(actualAns)) {
-                        pass = false;
-                        firstMismatchAct = "[grade -> " + actualAns + "]";
-                        firstMismatchExp = "[grade -> " + expectedAns + "]";
-                        break;
-                    }
+                    expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
+                }
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|test-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

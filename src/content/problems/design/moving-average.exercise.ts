@@ -70,12 +70,13 @@ Implement the \`MovingAverage\` class:\n\n- \`MovingAverage(int size)\` Initiali
             MovingAverage obj = new MovingAverage(maxSize);
             java.util.Queue<Integer> refQueue = new java.util.LinkedList<>();
             long refSum = 0;
-            boolean pass = true;
-            
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int val = rng.nextInt(20000) - 10000;
                 
                 // Track expected
@@ -87,14 +88,30 @@ Implement the \`MovingAverage\` class:\n\n- \`MovingAverage(int size)\` Initiali
                 double expectedAvg = (double) refSum / refQueue.size();
                 double actualAvg = obj.next(val);
                 
-                if (Math.abs(expectedAvg - actualAvg) > 1e-5) {
-                    pass = false;
-                    firstMismatchAct = "[" + actualAvg + "]";
-                    firstMismatchExp = "[" + expectedAvg + "]";
-                    break;
+                expTrace.add(expectedAvg);
+                    actTrace.add(actualAvg);
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|test-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (actStr.length() > 2000) actStr = actStr.substring(0, 2000) + "...";
+                if (expStr.length() > 2000) expStr = expStr.substring(0, 2000) + "...";
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

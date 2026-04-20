@@ -131,11 +131,13 @@ class DrawingBoard {
             double currentTotalArea = 0.0;
             java.util.List<String> names = new java.util.ArrayList<>();
 
-            boolean pass = true;
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int type = rng.nextInt(3);
 
                 if (type == 0) { // addShape
@@ -168,26 +170,38 @@ class DrawingBoard {
                     String expectedAns = "[" + String.join(", ", names) + "]";
                     String actualAns = obj.showAllShapes();
 
-                    if (!expectedAns.equals(actualAns)) {
-                        pass = false;
-                        firstMismatchAct = "[showAllShapes -> " + actualAns + "]";
-                        firstMismatchExp = "[showAllShapes -> " + expectedAns + "]";
-                        break;
-                    }
+                    expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
                 } else { // totalArea
                     double expectedAns = currentTotalArea;
                     double actualAns = obj.totalArea();
 
                     // Compare with small epsilon for floating point representation differences
-                    if (Math.abs(expectedAns - actualAns) > 1e-6) {
-                        pass = false;
-                        firstMismatchAct = "[totalArea -> " + actualAns + "]";
-                        firstMismatchExp = "[totalArea -> " + expectedAns + "]";
-                        break;
-                    }
+                    expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
+                }
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|test-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (actStr.length() > 2000) actStr = actStr.substring(0, 2000) + "...";
+                if (expStr.length() > 2000) expStr = expStr.substring(0, 2000) + "...";
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

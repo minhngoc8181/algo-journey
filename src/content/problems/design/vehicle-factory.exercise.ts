@@ -108,35 +108,52 @@ class VehicleFactory {
             int opsCount = (i < 5) ? 10 : 50;
             VehicleFactory obj = new VehicleFactory();
 
-            boolean pass = true;
-            String firstMismatchAct = "\\"[OK-Test-" + i + "] Ops: \\" + opsCount";
-            String firstMismatchExp = firstMismatchAct;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 String reqType = types[rng.nextInt(types.length)];
                 
                 String expectedAns;
                 if (reqType.equals("Car") || reqType.equals("Bike") || reqType.equals("Motorbike")) {
-                    // Because user strings might slightly vary, we simulate the logic of checking the output contains the class name
                     String actualAns = obj.orderVehicle(reqType);
-                    if (actualAns.equals("Unknown type") || !actualAns.toLowerCase().contains(reqType.toLowerCase())) {
-                        pass = false;
-                        firstMismatchAct = "[orderVehicle(" + reqType + ") -> " + actualAns + "]";
-                        firstMismatchExp = "[orderVehicle(" + reqType + ") -> Must contain " + reqType + "]";
-                        break;
-                    }
+                    expectedAns = "";
+                    if (reqType.equals("Car")) expectedAns = "This is a Car | Starting engine of car | Stopping car";
+                    else if (reqType.equals("Bike")) expectedAns = "This is a Bike | Pedaling bike | Using bike brakes";
+                    else expectedAns = "This is a Motorbike | Starting engine of motorbike | Stopping motorbike";
+                    expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
                 } else {
                     expectedAns = "Unknown type";
                     String actualAns = obj.orderVehicle(reqType);
-                    if (!expectedAns.equals(actualAns)) {
-                        pass = false;
-                        firstMismatchAct = "[orderVehicle -> " + actualAns + "]";
-                        firstMismatchExp = "[orderVehicle -> " + expectedAns + "]";
-                        break;
-                    }
+                    expTrace.add(expectedAns);
+                    actTrace.add(actualAns);
+                }
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
-            System.out.println("AJ|test-" + i + "|" + pass + "|" + firstMismatchAct + "|" + firstMismatchExp);
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (actStr.length() > 2000) actStr = actStr.substring(0, 2000) + "...";
+                if (expStr.length() > 2000) expStr = expStr.substring(0, 2000) + "...";
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
+            System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
     }
   }

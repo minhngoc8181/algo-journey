@@ -124,11 +124,13 @@ lRUCache.get(4);    // return 4`,
             // key universe slightly larger than capacity to ensure evictions happen
             int keyRange = capacity + rng.nextInt(capacity + 1) + 1;
 
-            String mismatchAct = null;
-            String mismatchExp = null;
-            int getOps = 0;
+            java.util.List<Object> expTrace = new java.util.ArrayList<>();
+            java.util.List<Object> actTrace = new java.util.ArrayList<>();
+            expTrace.add(null);
+            actTrace.add(null);
 
             for (int k = 0; k < opsCount; k++) {
+                int traceSizeBefore = expTrace.size();
                 int type = rng.nextInt(3); // 0,1=put, 2=get
                 int key  = rng.nextInt(keyRange);
 
@@ -139,19 +141,29 @@ lRUCache.get(4);    // return 4`,
                 } else {
                     int exp = tracker.get(key);
                     int act = obj.get(key);
-                    getOps++;
-                    if (exp != act) {
-                        mismatchAct = "get(" + key + ")=" + act;
-                        mismatchExp = "get(" + key + ")=" + exp;
-                        break;
-                    }
+                    expTrace.add(exp);
+                    actTrace.add(act);
+                }
+                if (expTrace.size() == traceSizeBefore) {
+                    expTrace.add(null);
+                    actTrace.add(null);
                 }
             }
 
-            boolean pass = (mismatchAct == null);
-            // On pass: report summary so result is never trivially empty
-            String actStr = pass ? ("ok:" + getOps + "gets,cap=" + capacity) : mismatchAct;
-            String expStr = pass ? ("ok:" + getOps + "gets,cap=" + capacity) : mismatchExp;
+            boolean pass = actTrace.equals(expTrace);
+            String actStr = actTrace.toString();
+            String expStr = expTrace.toString();
+            if (!pass) {
+                int mismatchIdx = -1;
+                for (int m = 0; m < actTrace.size(); m++) {
+                    if (actTrace.get(m) == null && expTrace.get(m) == null) continue;
+                    if (actTrace.get(m) == null || !actTrace.get(m).equals(expTrace.get(m))) { mismatchIdx = m; break; }
+                }
+                if (mismatchIdx != -1) {
+                    actStr = "[Mismatch at idx " + mismatchIdx + "] " + actStr;
+                    expStr = "[Mismatch at idx " + mismatchIdx + "] " + expStr;
+                }
+            }
             System.out.println("AJ|test-" + i + "|" + pass + "|" + actStr + "|" + expStr);
         }`
 
