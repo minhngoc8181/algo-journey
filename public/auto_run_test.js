@@ -52,9 +52,11 @@ function getApi() {
 function readScore() {
   const statsEl = document.querySelector('.result-summary__stats');
   if (!statsEl) return null;
-  const m = statsEl.textContent?.match(/(\d+)\s*\/\s*(\d+)/);
-  if (!m) return null;
-  return { passed: parseInt(m[1]), total: parseInt(m[2]) };
+  const text = statsEl.textContent || '';
+  const m = text.match(/(\d+)\s*\/\s*(\d+)/);
+  if (m) return { passed: parseInt(m[1]), total: parseInt(m[2]) };
+  if (text.toLowerCase().includes('error')) return { passed: 'err', total: 'err' };
+  return null;
 }
 
 /** Click a button by id, return false if not found */
@@ -232,7 +234,7 @@ window.auto_run_test = async function (onlyFailing = false) {
                 maxVal = val;
              }
           }
-          if (maxCount > threshold && tests.length > 0) {
+          if (maxCount > threshold && tests.length > 0 && !maxVal.endsWith('...')) {
              suspiciousTestWarning = `Expected "${maxVal.length > 50 ? maxVal.substring(0, 50) + '...' : maxVal}" repeated ${maxCount}/${tests.length}`;
           }
         }
@@ -244,11 +246,11 @@ window.auto_run_test = async function (onlyFailing = false) {
       else if (trivialCount >= solTot && solTot > 0) status = '🟠 ALL_TRIVIAL';
       else if (blankN > 18) status = '🟠 ALL_TRIVIAL'; // Even if not matching sentinel exactly, blank passing 19-20 tests means useless tests.
       else if (suspiciousTestWarning) status = '🟣 POOR_TESTS';
-      else if (blankN > CFG.WEAK_THRESHOLD) status = '🟡 WEAK_TESTS';
+      else if (blankN >= Math.max(CFG.WEAK_THRESHOLD, solTot * 0.25)) status = '🟡 WEAK_TESTS';
       else status = '🟢 OK';
 
-      const blankStr = blankScore ? `${blankN}/${blankTot}` : '?/?';
-      const solStr = solScore ? `${solN}/${solTot}` : (solution ? '?/?' : 'N/A');
+      const blankStr = blankScore ? (blankScore.passed === 'err' ? 'Err/Err' : `${blankN}/${blankTot}`) : '?/?';
+      const solStr = solScore ? (solScore.passed === 'err' ? 'Err/Err' : `${solN}/${solTot}`) : (solution ? '?/?' : 'N/A');
       let extraLabel = trivialCount > 0 ? ` (trivial: ${trivialCount})` : '';
       if (suspiciousTestWarning) extraLabel += ` [${suspiciousTestWarning}]`;
       
@@ -293,8 +295,8 @@ window.auto_run_test = async function (onlyFailing = false) {
   console.log('─'.repeat(72));
 
   for (const r of report) {
-    const blankStr = (r.blankPassed !== '?') ? `${r.blankPassed}/${r.blankTotal}` : '?/?';
-    const solStr = (r.solPassed !== '?') ? `${r.solPassed}/${r.solTotal}` : (r.status === '🔵 NO_SOLUTION' ? 'N/A' : '?/?');
+    const blankStr = (r.blankPassed === 'err') ? 'Err' : ((r.blankPassed !== '?') ? `${r.blankPassed}/${r.blankTotal}` : '?/?');
+    const solStr = (r.solPassed === 'err') ? 'Err' : ((r.solPassed !== '?') ? `${r.solPassed}/${r.solTotal}` : (r.status === '🔵 NO_SOLUTION' ? 'N/A' : '?/?'));
     const trivAdd = r.trivialCount ? ` (triv:${r.trivialCount})` : '';
     const poorAdd = r.suspiciousTestWarning ? ` [${r.suspiciousTestWarning}]` : '';
     console.log(
