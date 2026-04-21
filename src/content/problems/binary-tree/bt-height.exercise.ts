@@ -1,0 +1,103 @@
+import { defineExercise } from '../../_loader';
+import { TREE_NODE_HELPER, TREE_NODE_COMMENT } from './_helpers';
+
+export default defineExercise({
+  id: 'bt-height',
+  version: 1,
+  title: 'Binary Tree Height',
+  summary: 'Compute the height (maximum depth) of a binary tree.',
+  topic: 'binary-tree',
+  difficulty: 'easy',
+  tags: ['binary-tree', 'tree', 'recursion', 'dfs', 'cse202'],
+  estimatedMinutes: 15,
+  order: 700,
+  mode: 'function_implementation',
+  hints: [
+    'The height of an empty tree (null root) is 0.',
+    'The height of a single node is 1.',
+    'Use recursion: `height(node) = 1 + max(height(node.left), height(node.right))`.',
+  ],
+  learningGoals: ['Tree recursion', 'DFS post-order thinking', 'Base case handling'],
+  prerequisites: ['Recursion basics'],
+
+  statement: `Given the \`root\` of a binary tree, return its **height** — the number of nodes along the longest path from the root down to the farthest leaf.
+
+Return \`0\` if the tree is empty.
+
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
+
+  constraints: [
+    'The number of nodes is in the range [0, 10⁴].',
+    '-10⁵ ≤ Node.val ≤ 10⁵',
+  ],
+  examples: [
+    {
+      input: 'root = [3, 9, 20, null, null, 15, 7]',
+      output: '3',
+      explanation: 'Path 3→20→15 or 3→20→7 has 3 nodes.',
+    },
+    { input: 'root = [1, null, 2]', output: '2' },
+    { input: 'root = []', output: '0', explanation: 'Empty tree has height 0.' },
+  ],
+
+  starter: {
+    file: 'Solution.java',
+    code: `${TREE_NODE_COMMENT}
+class Solution {
+    int height(TreeNode root) {
+        // Write your code here
+        return 0;
+    }
+}`,
+  },
+
+  helperClasses: [TREE_NODE_HELPER],
+
+  requiredStructure: {
+    className: 'Solution',
+    methodName: 'height',
+    signature: 'int height(TreeNode root)',
+  },
+
+  evaluation: {
+    comparator: 'exact_json',
+    javaGenerator: {
+      count: 5,
+      seed: 20260421,
+      namePrefix: 'stress-',
+      visibility: 'hidden',
+      genMethodBody: `
+        int[] depths = {3, 5, 7, 10, 12};
+        for (int i = 0; i < 5; i++) {
+            int maxD = depths[i] + rng.nextInt(3);
+            int maxNodes = (1 << (maxD + 1)) - 1;
+            TreeNode[] nodes = new TreeNode[maxNodes];
+            nodes[0] = new TreeNode(rng.nextInt(201) - 100);
+            for (int j = 1; j < maxNodes; j++) {
+                int par = (j - 1) / 2;
+                if (nodes[par] == null || rng.nextInt(4) == 0) continue;
+                nodes[j] = new TreeNode(rng.nextInt(201) - 100);
+                if (j % 2 == 1) nodes[par].left  = nodes[j];
+                else            nodes[par].right = nodes[j];
+            }
+            // Reference height: iterative using a stack
+            int expected = 0;
+            java.util.Deque<TreeNode> stack = new java.util.ArrayDeque<>();
+            java.util.Deque<Integer> depths2 = new java.util.ArrayDeque<>();
+            if (nodes[0] != null) { stack.push(nodes[0]); depths2.push(1); }
+            while (!stack.isEmpty()) {
+                TreeNode cur = stack.pop();
+                int d = depths2.pop();
+                if (d > expected) expected = d;
+                if (cur.left  != null) { stack.push(cur.left);  depths2.push(d + 1); }
+                if (cur.right != null) { stack.push(cur.right); depths2.push(d + 1); }
+            }
+            try {
+                int actual = s.height(nodes[0]);
+                System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
+            } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }`,
+    },
+  },
+});
+

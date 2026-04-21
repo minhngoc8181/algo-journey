@@ -143,6 +143,15 @@ function toJavaLiteral(value: unknown, javaType: string): string {
     return 'null';
   }
 
+  // TreeNode — convert level-order JS array (with nulls) to buildTree() call
+  if (javaType === 'TreeNode') {
+    if (!Array.isArray(value) || (value as unknown[]).length === 0) return 'null';
+    const elems = (value as (number | null)[]).map(e =>
+      e === null || e === undefined ? 'null' : String(Math.trunc(e as number))
+    ).join(', ');
+    return `buildTree(new Integer[]{${elems}})`;
+  }
+
   // primitive arrays: int[], long[], etc.
   if (javaType.endsWith('[]')) {
     const arr = value as unknown[];
@@ -188,8 +197,13 @@ function isListNodeType(t: string): boolean {
   return t === 'ListNode';
 }
 
+function isTreeNodeType(t: string): boolean {
+  return t === 'TreeNode';
+}
+
 function equalExpr(ret: string, a: string, b: string): string {
   if (isListNodeType(ret)) return `java.util.Objects.equals(listToString(${a}), listToString(${b}))`;
+  if (isTreeNodeType(ret)) return `java.util.Objects.equals(treeToString(${a}), treeToString(${b}))`;
   if (ret.endsWith('[]'))   return `java.util.Arrays.equals(${a}, ${b})`;
   if (ret === 'String')     return `java.util.Objects.equals(${a}, ${b})`;
   if (isListType(ret))      return `java.util.Objects.equals(${a}, ${b})`;
@@ -200,6 +214,7 @@ function equalExpr(ret: string, a: string, b: string): string {
 
 function toStringExpr(ret: string, v: string): string {
   if (isListNodeType(ret)) return `listToString(${v})`;
+  if (isTreeNodeType(ret)) return `treeToString(${v})`;
   if (ret.endsWith('[]'))  return `java.util.Arrays.toString(${v})`;
   if (ret === 'String')    return `(${v} == null ? "null" : ${v})`;
   if (ret === 'double' || ret === 'Double') return `(String.valueOf(${v}).endsWith(".0") ? String.valueOf(${v}).substring(0, String.valueOf(${v}).length() - 2) : String.valueOf(${v}))`;
@@ -255,11 +270,12 @@ ${javaGen.genMethodBody}
     : '';
 
   const allTypes = [returnType, ...params.map(p => p.type)].join(' ');
-  const needsArrays  = allTypes.includes('[]');
-  const needsList    = allTypes.includes('List');
-  const needsMap     = allTypes.includes('Map');
-  const needsSet     = allTypes.includes('Set');
+  const needsArrays   = allTypes.includes('[]');
+  const needsList     = allTypes.includes('List');
+  const needsMap      = allTypes.includes('Map');
+  const needsSet      = allTypes.includes('Set');
   const needsListNode = allTypes.includes('ListNode');
+  const needsTreeNode = allTypes.includes('TreeNode');
 
   const imports = [
     needsArrays ? 'import java.util.Arrays;'    : '',
@@ -291,6 +307,45 @@ ${javaGen.genMethodBody}
     }
 ` : '';
 
+  // TreeNode helper methods (buildTree from level-order Integer[], treeToString inorder)
+  const treeNodeHelpers = needsTreeNode ? `
+    static TreeNode buildTree(Integer[] level) {
+        if (level == null || level.length == 0 || level[0] == null) return null;
+        TreeNode root = new TreeNode(level[0]);
+        java.util.Queue<TreeNode> q = new java.util.LinkedList<>();
+        q.offer(root);
+        int i = 1;
+        while (!q.isEmpty() && i < level.length) {
+            TreeNode cur = q.poll();
+            if (i < level.length && level[i] != null) {
+                cur.left = new TreeNode(level[i]); q.offer(cur.left);
+            }
+            i++;
+            if (i < level.length && level[i] != null) {
+                cur.right = new TreeNode(level[i]); q.offer(cur.right);
+            }
+            i++;
+        }
+        return root;
+    }
+
+    static String treeToString(TreeNode root) {
+        // Inorder traversal as string for comparison
+        StringBuilder sb = new StringBuilder("[");
+        java.util.Deque<TreeNode> st = new java.util.ArrayDeque<>();
+        TreeNode cur = root;
+        boolean first = true;
+        while (cur != null || !st.isEmpty()) {
+            while (cur != null) { st.push(cur); cur = cur.left; }
+            cur = st.pop();
+            if (!first) sb.append(", ");
+            sb.append(cur.val); first = false;
+            cur = cur.right;
+        }
+        return sb.append("]").toString();
+    }
+` : '';
+
   return `${imports}public class RunnerMain {
     public static void main(String[] args) {
         Solution s = new Solution();
@@ -298,7 +353,7 @@ ${mainBody}${genCall}        System.out.println("__AJ_DONE__");
     }
 ${methods}
 ${genMethod}
-${listNodeHelpers}
+${listNodeHelpers}${treeNodeHelpers}
 }
 `;
 }

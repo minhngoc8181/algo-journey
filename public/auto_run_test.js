@@ -243,7 +243,7 @@ window.auto_run_test = async function (onlyFailing = false) {
       let status;
       if (!solution) status = '🔵 NO_SOLUTION';
       else if (solN < solTot) status = '🔴 SOL_FAILS';
-      else if (trivialCount >= solTot && solTot > 0) status = '🟠 ALL_TRIVIAL';
+      else if (trivialCount >= solTot && solTot > 0 && !isAllBoolean) status = '🟠 ALL_TRIVIAL';
       else if (blankN > 18) status = '🟠 ALL_TRIVIAL'; // Even if not matching sentinel exactly, blank passing 19-20 tests means useless tests.
       else if (suspiciousTestWarning) status = '🟣 POOR_TESTS';
       else if (blankN >= Math.max(CFG.WEAK_THRESHOLD, solTot * 0.25)) status = '🟡 WEAK_TESTS';

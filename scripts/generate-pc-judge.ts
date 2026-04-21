@@ -117,6 +117,20 @@ const LIST_NODE_CODE = `public class ListNode {
 }
 `;
 
+const TREE_NODE_CODE = `public class TreeNode {
+    public int val;
+    public TreeNode left;
+    public TreeNode right;
+    public TreeNode() {}
+    public TreeNode(int val) { this.val = val; }
+    public TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+}
+`;
+
 /**
  * Load an .exercise.ts file without Vite by stripping imports/exports and
  * injecting mock stubs for defineExercise, LIST_NODE_HELPER, etc.
@@ -144,12 +158,29 @@ const LIST_NODE_COMMENT = \`/**
  * Definition for singly-linked list.
  * public class ListNode { int val; ListNode next; ... }
  */\`;
-const TREE_NODE_HELPER = { fileName: 'TreeNode.java', code: '' };
+const TREE_NODE_HELPER = {
+  fileName: 'TreeNode.java',
+  code: \`${TREE_NODE_CODE}\`
+};
+const TREE_NODE_COMMENT = \`/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val; this.left = left; this.right = right;
+ *     }
+ * }
+ */\`;
 const listToArray = (a) => a;
 const mergeSortedArrays = (a, b) => [];
 const reverseArray = (a) => [...a].reverse();
 const getMiddleValue = (a) => a[Math.floor(a.length/2)] ?? -1;
 `;
+
 
   try {
     const fn = new Function(`
@@ -760,6 +791,7 @@ NỘI DUNG FOLDER
   Runner.java         — Harness chấm bài (KHÔNG sửa)
 ${helpers.map(h => `  ${h.padEnd(20)}— Helper class (KHÔNG sửa)`).join('\n')}
   ${sf.padEnd(20)}— File nộp của sinh viên (THAY THẾ nội dung này)
+  _starter.java       — Code khởi đầu (copy → đổi tên thành ${sf} để bắt đầu)
   _solution_ref.java  — Đáp án mẫu (để kiểm tra)
   grade.bat           — Script chấm bài (Windows)
   grade.sh            — Script chấm bài (Unix/Mac)
@@ -902,8 +934,26 @@ ${ex.starter.code}
   fs.writeFileSync(path.join(outDir, ex.starter.file), starterPlaceholder, 'utf8');
   console.log(`  ✓ ${ex.starter.file}  (student submission slot)`);
 
+  // 3b. _starter.java — clean file for students to start coding offline
+  //     Mirrors the web editor: student opens this, renames to ${ex.starter.file},
+  //     writes their solution, then runs grade.bat to check.
+  const cleanStarterHeader = [
+    `// ════════════════════════════════════════════════════════════`,
+    `// Bài: ${ex.title}`,
+    `// ────────────────────────────────────────────────────────────`,
+    `// Đây là file khởi đầu. Cách dùng:`,
+    `//   1. Copy file này → đổi tên thành: ${ex.starter.file}`,
+    `//   2. Viết code vào trong class`,
+    `//   3. Chạy: grade.bat (Windows) hoặc  bash grade.sh (Unix)`,
+    `// ════════════════════════════════════════════════════════════`,
+    ``,
+  ].join('\n');
+  fs.writeFileSync(path.join(outDir, '_starter.java'), cleanStarterHeader + ex.starter.code + '\n', 'utf8');
+  console.log(`  ✓ _starter.java  (clean starter for students)`);
+
   // 4. Reference solution — use for validation / grader self-test
   const solFile = walkFind(PROBLEMS, `${id}.solution.java`);
+
   if (solFile) {
     fs.copyFileSync(solFile, path.join(outDir, '_solution_ref.java'));
     console.log(`  ✓ _solution_ref.java  (reference — test with grade-ref.bat)`);

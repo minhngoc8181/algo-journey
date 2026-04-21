@@ -18,6 +18,7 @@ export type Topic =
   | 'design'
   | 'collections'
   | 'linked-list'
+  | 'binary-tree'
   | 'mono-stack';
 
 // ── Helper Classes (platform-injected, e.g. ListNode, TreeNode) ──
