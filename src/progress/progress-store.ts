@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 import { config } from '../app/config';
-import type { ProblemProgress, Draft, ProgressStatus } from '../shared/types';
+import type { ProblemProgress, Draft, ProgressStatus, Submission } from '../shared/types';
 
 class ProgressStore {
   private db: IDBDatabase | null = null;
@@ -12,13 +12,26 @@ class ProgressStore {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(config.db.name, config.db.version);
 
-      request.onupgradeneeded = () => {
+      request.onupgradeneeded = (event) => {
         const db = request.result;
-        if (!db.objectStoreNames.contains(config.db.stores.progress)) {
-          db.createObjectStore(config.db.stores.progress, { keyPath: 'problemId' });
+        const oldVersion = (event as IDBVersionChangeEvent).oldVersion;
+
+        // v1 stores
+        if (oldVersion < 1) {
+          if (!db.objectStoreNames.contains(config.db.stores.progress)) {
+            db.createObjectStore(config.db.stores.progress, { keyPath: 'problemId' });
+          }
+          if (!db.objectStoreNames.contains(config.db.stores.drafts)) {
+            db.createObjectStore(config.db.stores.drafts, { keyPath: 'problemId' });
+          }
         }
-        if (!db.objectStoreNames.contains(config.db.stores.drafts)) {
-          db.createObjectStore(config.db.stores.drafts, { keyPath: 'problemId' });
+
+        // v2: submissions store with index on problemId
+        if (oldVersion < 2) {
+          if (!db.objectStoreNames.contains(config.db.stores.submissions)) {
+            const subStore = db.createObjectStore(config.db.stores.submissions, { keyPath: 'id' });
+            subStore.createIndex('by_problem', 'problemId', { unique: false });
+          }
         }
       };
 
@@ -58,6 +71,49 @@ class ProgressStore {
 
   async saveDraft(draft: Draft): Promise<void> {
     return this.put(config.db.stores.drafts, draft);
+  }
+
+  // ── Submissions ──
+
+  async saveSubmission(submission: Submission): Promise<void> {
+    return this.put(config.db.stores.submissions, submission);
+  }
+
+  async getSubmissions(problemId: string): Promise<Submission[]> {
+    return new Promise((resolve, reject) => {
+      if (!this.db) { resolve([]); return; }
+      const tx = this.db.transaction(config.db.stores.submissions, 'readonly');
+      const store = tx.objectStore(config.db.stores.submissions);
+      const index = store.index('by_problem');
+      const request = index.getAll(problemId);
+      request.onsuccess = () => resolve(request.result ?? []);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getAllSubmissions(): Promise<Submission[]> {
+    return this.getAll<Submission>(config.db.stores.submissions);
+  }
+
+  /** Keep only the most recent `maxCount` submissions per problem */
+  async pruneSubmissions(problemId: string, maxCount: number): Promise<void> {
+    const all = await this.getSubmissions(problemId);
+    if (all.length <= maxCount) return;
+
+    // Sort by timestamp descending, delete the oldest beyond maxCount
+    all.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    const toDelete = all.slice(maxCount);
+
+    return new Promise((resolve, reject) => {
+      if (!this.db || toDelete.length === 0) { resolve(); return; }
+      const tx = this.db.transaction(config.db.stores.submissions, 'readwrite');
+      const store = tx.objectStore(config.db.stores.submissions);
+      for (const sub of toDelete) {
+        store.delete(sub.id);
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
   }
 
   // ── Recent Problems ──

@@ -7,6 +7,8 @@ import { el, svgIcon, icons, render } from '../../shared/dom-utils';
 import { exerciseLoader } from '../../exercise-engine/exercise-loader';
 import { progressStore } from '../../progress/progress-store';
 import { router } from '../../app/router';
+import { exportAsZip } from '../../utils/zip-exporter';
+import { generateProgressPrompt } from '../../utils/ai-progress';
 import type { CatalogEntry, Topic, Difficulty, ProgressStatus } from '../../shared/types';
 
 // Active tag filter state (module-level so it persists across re-renders)
@@ -67,8 +69,114 @@ async function createStatsBar(): Promise<HTMLElement> {
     bar.appendChild(el('div', { className: 'stat-item', children: [valueEl, labelEl] }));
   }
 
+  // Feature 9: Export ZIP button
+  const exportBtn = el('button', {
+    className: 'export-btn',
+    id: 'export-submissions-btn',
+    attrs: { title: 'Download all submissions as .java files in a ZIP' },
+    children: [
+      el('span', { text: '📥' }),
+      el('span', { text: 'Export' }),
+    ],
+    on: {
+      click: () => exportAllSubmissions(),
+    },
+  });
+  bar.appendChild(exportBtn);
+
+  // Feature 9B: AI Progress Analysis button
+  const aiProgressBtn = el('button', {
+    className: 'ai-progress-btn',
+    id: 'ai-progress-btn',
+    attrs: { title: 'Generate an AI prompt to analyze your learning progress' },
+    children: [
+      el('span', { text: '🧠' }),
+      el('span', { text: 'AI Progress' }),
+    ],
+    on: {
+      click: () => handleAIProgress(),
+    },
+  });
+  bar.appendChild(aiProgressBtn);
+
   return bar;
 }
+
+async function exportAllSubmissions(): Promise<void> {
+  const btn = document.getElementById('export-submissions-btn') as HTMLButtonElement | null;
+  if (btn) { btn.textContent = 'Exporting…'; btn.disabled = true; }
+
+  try {
+    const catalog = exerciseLoader.getCatalog();
+    const allProgress = await progressStore.getAllProgress();
+    const allSubmissions = await progressStore.getAllSubmissions();
+
+    // Collect current drafts for all problems with submissions
+    const drafts = new Map<string, string>();
+    const problemsWithActivity = new Set(
+      [...allSubmissions.map(s => s.problemId), ...allProgress.map(p => p.problemId)]
+    );
+    for (const id of problemsWithActivity) {
+      const draft = await progressStore.getDraft(id);
+      const code = draft ? Object.values(draft.files)[0] : undefined;
+      if (code) drafts.set(id, code);
+    }
+
+    await exportAsZip({ catalog, allProgress, allSubmissions, drafts });
+  } catch (err) {
+    console.error('[export] Failed to export ZIP:', err);
+    showCatalogToast('Export failed. See console for details.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>📥</span><span>Export</span>';
+    }
+  }
+}
+
+async function handleAIProgress(): Promise<void> {
+  const btn = document.getElementById('ai-progress-btn') as HTMLButtonElement | null;
+  if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
+
+  try {
+    const catalog = exerciseLoader.getCatalog();
+    const allProgress = await progressStore.getAllProgress();
+    const allSubmissions = await progressStore.getAllSubmissions();
+
+    if (allProgress.length === 0 && allSubmissions.length === 0) {
+      showCatalogToast('No progress data yet — solve some problems first!', 'info');
+      return;
+    }
+
+    const prompt = generateProgressPrompt({ catalog, allProgress, allSubmissions });
+
+    await navigator.clipboard.writeText(prompt);
+    showCatalogToast('🧠 AI Progress prompt copied! Paste in ChatGPT or Gemini for a personalized study plan.', 'success');
+  } catch (err) {
+    console.error('[ai-progress] Failed:', err);
+    showCatalogToast('Failed to generate prompt. See console for details.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>🧠</span><span>AI Progress</span>';
+    }
+  }
+}
+
+function showCatalogToast(message: string, type: 'success' | 'info' | 'error' = 'info'): void {
+  document.getElementById('aj-catalog-toast')?.remove();
+  const toast = document.createElement('div');
+  toast.id = 'aj-catalog-toast';
+  toast.className = `aj-toast aj-toast--${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('aj-toast--visible'));
+  setTimeout(() => {
+    toast.classList.remove('aj-toast--visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
 
 function createFilterBar(route: ReturnType<typeof router.getCurrentRoute>): HTMLElement {
   // Search

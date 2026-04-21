@@ -313,3 +313,78 @@
 .tag-filter__clear-all:hover {
   color: var(--color-danger);
 }
+
+/* ══════════════════════════════════════════════════════════
+   Feature 9: Export Submissions Button
+   ══════════════════════════════════════════════════════════ */
+
+.stats-bar {
+  /* Push export button to the far right */
+  justify-content: flex-start;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  margin-left: auto;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.export-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  box-shadow: 0 2px 8px hsla(217, 91%, 60%, 0.15);
+  transform: translateY(-1px);
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── AI Progress Button (Feature 9B) ── */
+
+.ai-progress-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ai-progress-btn:hover {
+  color: white;
+  border-color: hsl(270, 70%, 55%);
+  background: hsl(270, 70%, 55%);
+  box-shadow: 0 2px 12px hsla(270, 70%, 55%, 0.35);
+  transform: translateY(-1px);
+}
+
+.ai-progress-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+

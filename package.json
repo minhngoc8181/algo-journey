@@ -20,6 +20,8 @@
     "vite": "^6.3.0"
   },
   "dependencies": {
+    "@types/jszip": "^3.4.0",
+    "jszip": "^3.10.1",
     "marked": "^18.0.1",
     "monaco-editor": "^0.52.0",
     "prettier": "^3.8.2",

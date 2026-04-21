@@ -23,11 +23,23 @@ export const config = {
   /** IndexedDB config */
   db: {
     name: 'algo-journey-db',
-    version: 1,
+    version: 2,
     stores: {
       progress: 'progress',
       drafts: 'drafts',
+      submissions: 'submissions',
     },
+  },
+
+  /** Feature 8: Solution access gate */
+  solutionAccess: {
+    minAttempts: 5,
+    minTimeMinutes: 60,
+  },
+
+  /** Feature 9: Submission history */
+  submissions: {
+    maxPerProblem: 50,
   },
 
   /** Execution limits */

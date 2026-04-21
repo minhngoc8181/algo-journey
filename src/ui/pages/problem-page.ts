@@ -6,12 +6,19 @@ import { el, svgIcon, icons, render } from '../../shared/dom-utils';
 import { exerciseLoader } from '../../exercise-engine/exercise-loader';
 import { progressStore } from '../../progress/progress-store';
 import { router } from '../../app/router';
+import { config } from '../../app/config';
 import { javaRun } from '../../runner/java-runner';
-import type { Exercise, RunResult, TestResult } from '../../shared/types';
+import { getSolution } from '../../content/_loader';
+import { generateAIPrompt, AI_LEVELS } from '../../utils/ai-prompt';
+import type { AILevel } from '../../utils/ai-prompt';
+import type { Exercise, RunResult, TestResult, Submission, ProblemProgress } from '../../shared/types';
 import { marked } from 'marked';
 
 // Monaco editor instance reference
 let editorInstance: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
+
+// Track the last run result for AI prompt context
+let lastRunResult: RunResult | null = null;
 
 const SPLIT_RATIO_KEY = 'algopath:split-ratio';
 const DEFAULT_SPLIT = 50; // percent for left panel
@@ -338,10 +345,38 @@ function createEditorPanel(exercise: Exercise, _starterCode: string): HTMLElemen
     },
   });
 
+  // Feature 8: Solution button
+  const solutionBtn = el('button', {
+    className: 'solution-btn solution-btn--locked',
+    id: 'solution-btn',
+    children: [
+      el('span', { className: 'solution-btn__icon', text: '🔒' }),
+      el('span', { className: 'solution-btn__label', text: 'Solution' }),
+    ],
+    on: {
+      click: () => handleShowSolution(exercise),
+    },
+  });
+  // Initialize solution button state asynchronously
+  initSolutionButton(exercise);
+
+  // Feature 10: Ask AI button
+  const aiBtn = el('button', {
+    className: 'ai-btn',
+    id: 'ai-btn',
+    children: [
+      el('span', { text: '🤖' }),
+      el('span', { text: 'Ask AI' }),
+    ],
+    on: {
+      click: () => handleAskAI(exercise),
+    },
+  });
+
   const spacer = el('div', { className: 'run-controls__spacer' });
   const controls = el('div', {
     className: 'run-controls',
-    children: [resetBtn, spacer, runBtn, submitBtn],
+    children: [resetBtn, solutionBtn, aiBtn, spacer, runBtn, submitBtn],
   });
 
   // Result tabs
@@ -684,22 +719,49 @@ async function handleRun(exercise: Exercise, isSubmit = false): Promise<void> {
     // Mock run (will be replaced with real compiler/runner later)
     const result = await javaRun(exercise, code, isSubmit, exercise.limits.timeLimitMs || 1000);
     (window as any).__lastRunResult = result;
+    lastRunResult = result;
 
-    // Update progress
+    const filePath = exercise.editableFiles[0]?.path ?? 'Solution.java';
+    const now = new Date().toISOString();
+
+    // Update progress (with firstAttemptAt for Feature 8)
     const currentProgress = await progressStore.getProgress(exercise.id);
     await progressStore.saveProgress({
       problemId: exercise.id,
       exerciseVersion: exercise.version,
       status: result.status === 'accepted' ? 'accepted' : 'attempted',
       attemptCount: (currentProgress?.attemptCount ?? 0) + 1,
-      lastRunAt: new Date().toISOString(),
+      firstAttemptAt: currentProgress?.firstAttemptAt ?? now,
+      lastRunAt: now,
       bestResult: result.status === 'accepted'
         ? { passed: result.tests.length, total: result.tests.length }
         : currentProgress?.bestResult ?? { passed: result.tests.filter(t => t.status === 'passed').length, total: result.tests.length },
+      solutionUnlocked: currentProgress?.solutionUnlocked,
     });
+
+    // Feature 9: Save submission snapshot
+    const submission: Submission = {
+      id: `${exercise.id}::${now}`,
+      problemId: exercise.id,
+      exerciseVersion: exercise.version,
+      timestamp: now,
+      code: { [filePath]: code },
+      isSubmit,
+      result: {
+        status: result.status,
+        passed: result.tests.filter(t => t.status === 'passed').length,
+        total: result.tests.length,
+        elapsedMs: result.elapsedMs,
+      },
+    };
+    await progressStore.saveSubmission(submission);
+    await progressStore.pruneSubmissions(exercise.id, config.submissions.maxPerProblem);
 
     // Render results
     renderResults(result);
+
+    // Update solution button state after run
+    updateSolutionButton(exercise);
 
   } catch (err) {
     renderResults({
@@ -903,6 +965,226 @@ function formatStatement(text: string, inline: boolean = false): string {
   }
 }
 
+// ── Feature 8: Solution unlock logic ─────────────────────
+
+function isSolutionUnlockable(progress: ProblemProgress | null): boolean {
+  if (!progress) return false;
+  if (progress.solutionUnlocked) return true;
+  if (progress.status === 'accepted') return true;
+
+  const { minAttempts, minTimeMinutes } = config.solutionAccess;
+  const hasEnoughAttempts = progress.attemptCount >= minAttempts;
+
+  if (!progress.firstAttemptAt) return false;
+  const firstAt = new Date(progress.firstAttemptAt).getTime();
+  const elapsedMin = (Date.now() - firstAt) / 60000;
+  const hasEnoughTime = elapsedMin >= minTimeMinutes;
+
+  return hasEnoughAttempts && hasEnoughTime;
+}
+
+function getSolutionTooltip(progress: ProblemProgress | null): string {
+  if (!progress) return `Attempt ≥${config.solutionAccess.minAttempts} times and wait ≥${config.solutionAccess.minTimeMinutes} min`;
+
+  const { minAttempts, minTimeMinutes } = config.solutionAccess;
+  const attempts = progress.attemptCount;
+  const elapsedMin = progress.firstAttemptAt
+    ? Math.floor((Date.now() - new Date(progress.firstAttemptAt).getTime()) / 60000)
+    : 0;
+
+  const parts: string[] = [];
+  if (attempts < minAttempts) parts.push(`Attempts: ${attempts}/${minAttempts}`);
+  if (elapsedMin < minTimeMinutes) parts.push(`Time: ${elapsedMin}/${minTimeMinutes} min`);
+
+  return parts.length > 0 ? parts.join(' · ') : 'Click to view solution';
+}
+
+async function initSolutionButton(exercise: Exercise): Promise<void> {
+  const progress = await progressStore.getProgress(exercise.id);
+  applySolutionButtonState(progress);
+}
+
+async function updateSolutionButton(exercise: Exercise): Promise<void> {
+  const progress = await progressStore.getProgress(exercise.id);
+  applySolutionButtonState(progress);
+}
+
+function applySolutionButtonState(progress: ProblemProgress | null): void {
+  const btn = document.getElementById('solution-btn') as HTMLButtonElement | null;
+  if (!btn) return;
+
+  const unlockable = isSolutionUnlockable(progress);
+  const iconEl = btn.querySelector('.solution-btn__icon');
+
+  btn.classList.toggle('solution-btn--locked', !unlockable);
+  btn.classList.toggle('solution-btn--unlocked', unlockable);
+
+  if (iconEl) {
+    iconEl.textContent = progress?.solutionUnlocked ? '👁' : unlockable ? '🔓' : '🔒';
+  }
+
+  btn.title = unlockable ? 'Click to view solution' : getSolutionTooltip(progress);
+}
+
+async function handleShowSolution(exercise: Exercise): Promise<void> {
+  const progress = await progressStore.getProgress(exercise.id);
+
+  if (!isSolutionUnlockable(progress)) {
+    showToast(getSolutionTooltip(progress), 'info');
+    return;
+  }
+
+  // Mark as unlocked (sticky)
+  if (progress && !progress.solutionUnlocked) {
+    progress.solutionUnlocked = true;
+    await progressStore.saveProgress(progress);
+    applySolutionButtonState(progress);
+  }
+
+  // Load solution
+  const solutionCode = await getSolution(exercise.id);
+  if (!solutionCode) {
+    showToast('No reference solution available for this problem.', 'info');
+    return;
+  }
+
+  showSolutionModal(exercise.title, solutionCode);
+}
+
+function showSolutionModal(title: string, code: string): void {
+  // Remove existing
+  document.getElementById('solution-overlay')?.remove();
+
+  const overlay = el('div', {
+    className: 'solution-overlay',
+    id: 'solution-overlay',
+    on: {
+      click: (e: Event) => {
+        if (e.target === overlay) overlay.remove();
+      },
+    },
+  });
+
+  const modal = el('div', { className: 'solution-overlay__content' });
+
+  const header = el('div', { className: 'solution-overlay__header', children: [
+    el('h3', { text: `Reference Solution — ${title}`, attrs: { style: 'margin: 0; font-size: var(--text-base);' } }),
+    el('button', {
+      className: 'btn-icon solution-overlay__close',
+      text: '✕',
+      on: { click: () => overlay.remove() },
+    }),
+  ]});
+
+  const codeBlock = el('pre', {
+    className: 'solution-overlay__code font-mono',
+    children: [el('code', { text: code })],
+  });
+
+  modal.append(header, codeBlock);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // ESC to close
+  const escHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+// ── Feature 10: AI Prompt ────────────────────────────────
+
+function handleAskAI(exercise: Exercise): void {
+  // Remove existing popup if any
+  document.getElementById('ai-popup')?.remove();
+
+  const code = editorInstance?.getValue() ??
+    (document.querySelector('#monaco-editor-container textarea') as HTMLTextAreaElement | null)?.value ?? '';
+
+  const popup = el('div', { className: 'ai-popup', id: 'ai-popup' });
+
+  const popupHeader = el('div', { className: 'ai-popup__header', text: 'Choose support level:' });
+  popup.appendChild(popupHeader);
+
+  for (const level of AI_LEVELS) {
+    const item = el('button', {
+      className: 'ai-popup__item',
+      children: [
+        el('span', { className: 'ai-popup__icon', text: level.icon }),
+        el('div', { className: 'ai-popup__text', children: [
+          el('span', { className: 'ai-popup__label', text: level.label }),
+          el('span', { className: 'ai-popup__desc', text: level.description }),
+        ]}),
+      ],
+      on: {
+        click: () => {
+          const prompt = generateAIPrompt({
+            exercise,
+            code,
+            lastResult: lastRunResult,
+            level: level.value as AILevel,
+          });
+          navigator.clipboard.writeText(prompt).then(() => {
+            showToast('✓ Prompt copied! Paste in ChatGPT, Gemini, or your preferred AI.', 'success');
+          }).catch(() => {
+            // Fallback: show in a modal
+            showSolutionModal('AI Prompt', prompt);
+          });
+          popup.remove();
+        },
+      },
+    });
+    popup.appendChild(item);
+  }
+
+  // Position near the AI button
+  const aiBtn = document.getElementById('ai-btn');
+  if (aiBtn) {
+    const rect = aiBtn.getBoundingClientRect();
+    popup.style.position = 'fixed';
+    popup.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+    popup.style.left = `${rect.left}px`;
+  }
+
+  document.body.appendChild(popup);
+
+  // Close on click outside
+  const closeHandler = (e: MouseEvent) => {
+    if (!popup.contains(e.target as Node) && e.target !== document.getElementById('ai-btn')) {
+      popup.remove();
+      document.removeEventListener('click', closeHandler);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeHandler), 0);
+}
+
+// ── Toast notification ───────────────────────────────────
+
+function showToast(message: string, type: 'success' | 'info' | 'error' = 'info'): void {
+  // Remove existing toast
+  document.getElementById('aj-toast')?.remove();
+
+  const toast = el('div', {
+    className: `aj-toast aj-toast--${type}`,
+    id: 'aj-toast',
+    text: message,
+  });
+
+  document.body.appendChild(toast);
+
+  // Animate in
+  requestAnimationFrame(() => toast.classList.add('aj-toast--visible'));
+
+  // Auto-dismiss
+  setTimeout(() => {
+    toast.classList.remove('aj-toast--visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
 export function setEditorValue(code: string): void {
   if (editorInstance) {
     editorInstance.setValue(code);
@@ -917,10 +1199,16 @@ export function disposeProblemPage(): void {
     editorInstance.dispose();
     editorInstance = null;
   }
-  
+  lastRunResult = null;
+
   // Clean up dynamic header positioning
   const appHeader = document.querySelector('.app-header') as HTMLElement;
   if (appHeader) {
     appHeader.style.left = '';
   }
+
+  // Clean up popups
+  document.getElementById('solution-overlay')?.remove();
+  document.getElementById('ai-popup')?.remove();
+  document.getElementById('aj-toast')?.remove();
 }

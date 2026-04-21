@@ -135,6 +135,8 @@ export function getAllCatalogEntries(): CatalogEntry[] {
       estimatedMinutes: def.estimatedMinutes,
       order: def.order,
       mode: def.mode,
+      learningGoals: def.learningGoals,
+      prerequisites: def.prerequisites,
     });
   }
 

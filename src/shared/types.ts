@@ -134,7 +134,8 @@ export interface JavaGenerator {
 
 // ── Catalog ──
 export type CatalogEntry = Pick<Exercise,
-  'id' | 'slug' | 'title' | 'summary' | 'topic' | 'difficulty' | 'tags' | 'estimatedMinutes' | 'order' | 'mode'
+  'id' | 'slug' | 'title' | 'summary' | 'topic' | 'difficulty' | 'tags' |
+  'estimatedMinutes' | 'order' | 'mode' | 'learningGoals' | 'prerequisites'
 >;
 
 // ── Run Results ──
@@ -183,11 +184,13 @@ export interface ProblemProgress {
   exerciseVersion: number;
   status: ProgressStatus;
   attemptCount: number;
+  firstAttemptAt: string;
   lastRunAt: string;
   bestResult?: {
     passed: number;
     total: number;
   };
+  solutionUnlocked?: boolean;
 }
 
 export interface Draft {
@@ -195,6 +198,23 @@ export interface Draft {
   exerciseVersion: number;
   updatedAt: string;
   files: Record<string, string>;
+}
+
+// ── Submissions (history) ──
+export interface Submission {
+  /** Composite key: `${problemId}::${timestamp}` */
+  id: string;
+  problemId: string;
+  exerciseVersion: number;
+  timestamp: string;
+  code: Record<string, string>;
+  isSubmit: boolean;
+  result: {
+    status: RunStatus;
+    passed: number;
+    total: number;
+    elapsedMs: number;
+  };
 }
 
 // ── UI State ──
