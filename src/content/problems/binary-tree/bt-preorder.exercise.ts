@@ -21,13 +21,13 @@ export default defineExercise({
 
   statement: `Given the \`root\` of a binary tree, return the **preorder traversal** of its node values.
 
-Preorder traversal visits nodes in the order: **Root Ã¢â€ â€™ Left Ã¢â€ â€™ Right**.
+Preorder traversal visits nodes in the order: **Root → Left → Right**.
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes is in the range [0, 10Ã¢ÂÂµ].',
-    '-10Ã¢ÂÂµ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂµ',
+    'The number of nodes is in the range [0, 10⁵].',
+    '-10⁵ ≤ Node.val ≤ 10⁵',
   ],
   examples: [
     {
@@ -99,7 +99,7 @@ class Solution {
             } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
         }
 
-        // Large-scale test 1: left-chain of 50,000 nodes Ã¢â€ â€™ preorder = [50000, 49999, ..., 1]
+        // Large-scale test 1: left-chain of 50,000 nodes → preorder = [50000, 49999, ..., 1]
         {
             int N = 50_000;
             TreeNode chainRoot = new TreeNode(N);

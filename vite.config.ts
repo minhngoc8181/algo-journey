@@ -7,6 +7,7 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  base: './',
   build: {
     target: 'es2020',
     outDir: 'dist',

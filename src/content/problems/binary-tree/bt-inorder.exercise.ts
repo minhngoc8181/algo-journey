@@ -22,19 +22,19 @@ export default defineExercise({
 
   statement: `Given the \`root\` of a binary tree, return the **inorder traversal** of its node values.
 
-Inorder traversal visits nodes in the order: **Left Ã¢â€ â€™ Root Ã¢â€ â€™ Right**.
+Inorder traversal visits nodes in the order: **Left → Root → Right**.
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes is in the range [0, 10Ã¢ÂÂµ].',
-    '-10Ã¢ÂÂµ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂµ',
+    'The number of nodes is in the range [0, 10⁵].',
+    '-10⁵ ≤ Node.val ≤ 10⁵',
   ],
   examples: [
     {
       input: 'root = [1, null, 2, null, null, 3]',
       output: '[1, 3, 2]',
-      explanation: 'Visiting: left(null), 1, right(2) Ã¢â€ â€™ left(3), 2, right(null).',
+      explanation: 'Visiting: left(null), 1, right(2) → left(3), 2, right(null).',
     },
     { input: 'root = []', output: '[]' },
     { input: 'root = [1]', output: '[1]' },
@@ -100,7 +100,7 @@ class Solution {
             } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
         }
 
-        // Large-scale test 1: right-chain of 50,000 nodes Ã¢â€ â€™ inorder = [1,2,...,50000]
+        // Large-scale test 1: right-chain of 50,000 nodes → inorder = [1,2,...,50000]
         {
             int N = 50_000;
             TreeNode chainRoot = new TreeNode(1);
@@ -115,7 +115,7 @@ class Solution {
             } catch (Exception e) { System.out.println("AJ_ERROR|large-right-chain-50k: " + (e)); }
         }
 
-        // Large-scale test 2: complete binary tree H=16 (65,535 nodes) Ã¢â€ â€™ verify size and sorted-ness for BST
+        // Large-scale test 2: complete binary tree H=16 (65,535 nodes) → verify size and sorted-ness for BST
         {
             int H = 16;
             int total = (1 << H) - 1;

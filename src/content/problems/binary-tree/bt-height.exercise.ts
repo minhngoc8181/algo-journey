@@ -20,21 +20,21 @@ export default defineExercise({
   learningGoals: ['Tree recursion', 'DFS post-order thinking', 'Base case handling'],
   prerequisites: ['Recursion basics'],
 
-  statement: `Given the \`root\` of a binary tree, return its **height** Ã¢â‚¬â€ the number of nodes along the longest path from the root down to the farthest leaf.
+  statement: `Given the \`root\` of a binary tree, return its **height** — the number of nodes along the longest path from the root down to the farthest leaf.
 
 Return \`0\` if the tree is empty.
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes is in the range [0, 10Ã¢ÂÂ´].',
-    '-10Ã¢ÂÂµ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂµ',
+    'The number of nodes is in the range [0, 10⁴].',
+    '-10⁵ ≤ Node.val ≤ 10⁵',
   ],
   examples: [
     {
       input: 'root = [3, 9, 20, null, null, 15, 7]',
       output: '3',
-      explanation: 'Path 3Ã¢â€ â€™20Ã¢â€ â€™15 or 3Ã¢â€ â€™20Ã¢â€ â€™7 has 3 nodes.',
+      explanation: 'Path 3→20→15 or 3→20→7 has 3 nodes.',
     },
     { input: 'root = [1, null, 2]', output: '2' },
     { input: 'root = []', output: '0', explanation: 'Empty tree has height 0.' },
@@ -99,7 +99,7 @@ class Solution {
             } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
         }
 
-        // Large-scale test 1: right-skewed chain of 100,000 nodes Ã¢â€ â€™ height = 100,000
+        // Large-scale test 1: right-skewed chain of 100,000 nodes → height = 100,000
         {
             int N = 100_000;
             TreeNode chainRoot = new TreeNode(1);

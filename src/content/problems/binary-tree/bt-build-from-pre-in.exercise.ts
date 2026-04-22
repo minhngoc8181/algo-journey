@@ -14,7 +14,7 @@ export default defineExercise({
   mode: 'function_implementation',
   hints: [
     'The FIRST element of preorder is always the root.',
-    'Find the root value in inorder Ã¢â‚¬â€ everything to its left is the left subtree, everything to its right is the right subtree.',
+    'Find the root value in inorder — everything to its left is the left subtree, everything to its right is the right subtree.',
     'The size of the left subtree (from inorder split) tells you how many elements of preorder belong to the left subtree.',
     'Recurse: buildTree(preorder[1..leftSize], inorder[0..rootIdx-1]) for left, and similarly for right.',
     'Use a HashMap to look up root positions in inorder in O(1).',
@@ -32,12 +32,12 @@ Reconstruct and return the binary tree.
 
 The answer is verified by comparing the **inorder traversal** of your returned tree against the expected inorder sequence.
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    '1 Ã¢â€°Â¤ preorder.length Ã¢â€°Â¤ 3000',
+    '1 ≤ preorder.length ≤ 3000',
     'preorder.length == inorder.length',
-    '-3000 Ã¢â€°Â¤ preorder[i], inorder[i] Ã¢â€°Â¤ 3000',
+    '-3000 ≤ preorder[i], inorder[i] ≤ 3000',
     'All values are unique.',
     'preorder and inorder represent a valid binary tree.',
   ],

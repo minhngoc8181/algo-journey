@@ -16,6 +16,8 @@ export type RouteChangeHandler = (route: Route) => void;
 
 class Router {
   private handlers: RouteChangeHandler[] = [];
+  /** Last known catalog filter state — restored when navigating back from a problem */
+  private savedCatalogRoute: Route = { page: 'catalog' };
 
   init(): void {
     window.addEventListener('hashchange', () => this.handleChange());
@@ -32,16 +34,31 @@ class Router {
 
   navigate(route: Route): void {
     if (route.page === 'problem' && route.slug) {
+      // Save current catalog state before entering a problem
+      const current = this.getCurrentRoute();
+      if (current.page === 'catalog') {
+        this.savedCatalogRoute = current;
+      }
       window.location.hash = `#/problem/${route.slug}`;
     } else {
+      // If no explicit filter params provided, restore the last saved catalog state
+      const hasExplicitParams = route.topic || route.difficulty || route.tags?.length || route.search;
+      const effectiveRoute = hasExplicitParams ? route : this.savedCatalogRoute;
+
       const params = new URLSearchParams();
-      if (route.topic && route.topic !== 'all') params.set('topic', route.topic);
-      if (route.difficulty && route.difficulty !== 'all') params.set('difficulty', route.difficulty);
-      if (route.tags && route.tags.length > 0) params.set('tags', route.tags.join(','));
-      if (route.search) params.set('search', route.search);
+      if (effectiveRoute.topic && effectiveRoute.topic !== 'all') params.set('topic', effectiveRoute.topic);
+      if (effectiveRoute.difficulty && effectiveRoute.difficulty !== 'all') params.set('difficulty', effectiveRoute.difficulty);
+      if (effectiveRoute.tags && effectiveRoute.tags.length > 0) params.set('tags', effectiveRoute.tags.join(','));
+      if (effectiveRoute.search) params.set('search', effectiveRoute.search);
       const qs = params.toString();
       window.location.hash = qs ? `#/?${qs}` : '#/';
     }
+  }
+
+  /** Navigate to catalog and explicitly clear all filters */
+  navigateToHome(): void {
+    this.savedCatalogRoute = { page: 'catalog' };
+    window.location.hash = '#/';
   }
 
   /** Update only the query params without triggering a full page re-render */

@@ -13,7 +13,7 @@ export default defineExercise({
   order: 701,
   mode: 'function_implementation',
   hints: [
-    'A tree is balanced if: left subtree is balanced, right subtree is balanced, AND |height(left) - height(right)| Ã¢â€°Â¤ 1.',
+    'A tree is balanced if: left subtree is balanced, right subtree is balanced, AND |height(left) - height(right)| ≤ 1.',
     'Write a helper `int checkHeight(TreeNode node)` that returns the actual height if balanced, or -1 if not.',
     'If `checkHeight` returns -1 for either child, propagate -1 upward immediately.',
   ],
@@ -24,11 +24,11 @@ export default defineExercise({
 
 A binary tree is height-balanced if for **every node** in the tree, the height of its left and right subtrees differs by at most 1.
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes is in the range [0, 10Ã¢ÂÂµ].',
-    '-10Ã¢ÂÂ´ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂ´',
+    'The number of nodes is in the range [0, 10⁵].',
+    '-10⁴ ≤ Node.val ≤ 10⁴',
   ],
   examples: [
     {
@@ -113,8 +113,8 @@ class Solution {
             } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
         }
 
-        // Large-scale test 1: right-chain of 50,000 nodes Ã¢â€ â€™ deeply unbalanced Ã¢â€ â€™ expected false
-        // This catches O(nÃ‚Â²) naive solutions (which call height() at every node)
+        // Large-scale test 1: right-chain of 50,000 nodes → deeply unbalanced → expected false
+        // This catches O(n²) naive solutions (which call height() at every node)
         {
             int N = 50_000;
             TreeNode chainRoot = new TreeNode(1);
@@ -127,7 +127,7 @@ class Solution {
             } catch (Exception e) { System.out.println("AJ_ERROR|large-right-chain-50k: " + (e)); }
         }
 
-        // Large-scale test 2: complete binary tree H=17 (131,071 nodes) Ã¢â€ â€™ perfectly balanced Ã¢â€ â€™ expected true
+        // Large-scale test 2: complete binary tree H=17 (131,071 nodes) → perfectly balanced → expected true
         {
             int H = 17;
             int total = (1 << H) - 1;

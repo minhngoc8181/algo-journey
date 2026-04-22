@@ -3,3 +3,4 @@ dist/assets
 scratch_out
 out/
 build.log
+dist/*

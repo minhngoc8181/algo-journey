@@ -30,11 +30,11 @@ It is **guaranteed** that \`val\` does not exist in the original BST.
 
 The answer is verified by the **inorder traversal** of the returned tree (must be sorted and contain \`val\`).
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes before insertion is in [0, 10Ã¢ÂÂ´].',
-    '-10Ã¢ÂÂ¸ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂ¸',
+    'The number of nodes before insertion is in [0, 10⁴].',
+    '-10⁸ ≤ Node.val ≤ 10⁸',
     'val is guaranteed not to exist in the original BST.',
   ],
   examples: [

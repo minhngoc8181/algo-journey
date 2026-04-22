@@ -14,7 +14,7 @@ export default defineExercise({
   mode: 'function_implementation',
   hints: [
     'A sorted array is the inorder traversal of a BST.',
-    'Pick the MIDDLE element as the root Ã¢â‚¬â€ this keeps the tree balanced.',
+    'Pick the MIDDLE element as the root — this keeps the tree balanced.',
     'Left subtree comes from the left half of the array, right subtree from the right half.',
     'Base case: if the subarray is empty, return null.',
   ],
@@ -29,11 +29,11 @@ The answer is verified by:
 1. **Inorder traversal** of the result must equal \`nums\`
 2. The tree must be **height-balanced**
 
-The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
 
   constraints: [
-    '1 Ã¢â€°Â¤ nums.length Ã¢â€°Â¤ 10Ã¢ÂÂ´',
-    '-10Ã¢ÂÂ´ Ã¢â€°Â¤ nums[i] Ã¢â€°Â¤ 10Ã¢ÂÂ´',
+    '1 ≤ nums.length ≤ 10⁴',
+    '-10⁴ ≤ nums[i] ≤ 10⁴',
     'nums is sorted in strictly ascending order.',
   ],
   examples: [

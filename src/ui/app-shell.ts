@@ -31,7 +31,14 @@ function createHeader(): HTMLElement {
     on: {
       click: (e: Event) => {
         e.preventDefault();
-        router.navigate({ page: 'catalog' });
+        const current = router.getCurrentRoute();
+        if (current.page === 'catalog') {
+          // Already on catalog → reset all filters
+          router.navigateToHome();
+        } else {
+          // Coming from problem → restore saved catalog filter state
+          router.navigate({ page: 'catalog' });
+        }
       },
     },
   });

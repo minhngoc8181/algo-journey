@@ -25,7 +25,7 @@ function getCompileWorker(): Promise<Worker> {
     // Spin up worker on first use
     if (!compileWorker) {
       compileWorker = new Worker(
-        new URL('../worker/compile-worker.js?v=' + Date.now(), import.meta.url),
+        new URL('../worker/compile-worker.js', import.meta.url),
         { type: 'module' },
       );
 
@@ -228,7 +228,7 @@ interface RunOutcome {
 function runWithTimeout(wasmBuffer: ArrayBuffer, timeLimitMs: number): Promise<RunOutcome> {
   return new Promise((resolve) => {
     const runWorker = new Worker(
-      new URL('../worker/run-worker.js?v=' + Date.now(), import.meta.url),
+      new URL('../worker/run-worker.js', import.meta.url),
       { type: 'module' },
     );
 
