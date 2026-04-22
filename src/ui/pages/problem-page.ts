@@ -7,7 +7,7 @@ import { exerciseLoader } from '../../exercise-engine/exercise-loader';
 import { progressStore } from '../../progress/progress-store';
 import { router } from '../../app/router';
 import { config } from '../../app/config';
-import { javaRun } from '../../runner/java-runner';
+import { javaRun, warmupWorker } from '../../runner/java-runner';
 import { getSolution } from '../../content/_loader';
 import { generateAIPrompt, AI_LEVELS } from '../../utils/ai-prompt';
 import type { AILevel } from '../../utils/ai-prompt';
@@ -68,6 +68,11 @@ export async function renderProblemPage(container: HTMLElement, slug: string): P
   layout.appendChild(rightPanel);
 
   render(container, layout);
+
+  // Eagerly warm up the compile worker in the background so the first
+  // Run click doesn't pay the cold-start cost of fetching compiler.wasm (~4 MB).
+  // Use a short delay so this doesn't compete with the first paint / Monaco init.
+  setTimeout(() => warmupWorker(), 500);
 
   // Restore saved ratio
   const savedRatio = Number(localStorage.getItem(SPLIT_RATIO_KEY)) || DEFAULT_SPLIT;

@@ -87,6 +87,20 @@ function workerRequest<T>(
   });
 }
 
+// ── Public warmup API ─────────────────────────────────────
+
+/**
+ * Eagerly spin up the compile worker and load compiler.wasm so the first
+ * Run click feels instant.  Safe to call multiple times — no-ops if already
+ * warming up or ready.
+ */
+export function warmupWorker(): void {
+  // Fire-and-forget: errors here are non-fatal (user will see them on actual Run)
+  getCompileWorker().catch((e) =>
+    console.warn('[java-runner] Warmup compile worker failed:', e),
+  );
+}
+
 // ── Public API ────────────────────────────────────────────
 
 export async function javaRun(
