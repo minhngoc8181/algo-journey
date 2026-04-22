@@ -56,14 +56,24 @@ Each package includes a test harness (`Runner.java`), a reference solution, and 
 
 ### Quality Control Pipeline
 
-A set of CLI tools keeps the exercise library honest:
+A set of CLI tools keeps the exercise library honest. You can run these commands globally or filter them by slug or tags.
 
 ```bash
-# Verify all reference solutions pass 100% of their own tests
-npm run pc-judge:verify verify-refs
+# 1. Generate standalone Java packages for PC Judge
+npm run pc-judge:all                 # Convert all problems
+npm run pc-judge <slug>              # Convert specific problem(s)
 
-# Measure actual code coverage of the test suite (line, branch, method)
-npm run pc-judge:coverage
+# 2. Verify Reference Solutions (ensure tests pass 100%)
+npm run pc-judge:verify verify-refs                    # Verify all problems
+npm run pc-judge:verify verify-refs "slug1;slug2"      # Verify specific problems
+npm run pc-judge:verify -- verify-refs "--tags=cse202" # Verify problems by tag
+
+# 3. Clean up generic runtime artifacts (.class, json)
+npm run pc-judge:verify clean
+
+# 4. Measure JaCoCo Code Coverage (line, branch, method)
+npm run pc-judge:coverage                    # Check coverage for all
+npm run pc-judge:coverage -- "--tags=cse202" # Check coverage by tag
 ```
 
 **Test verification** (`3_report_ref.json`) flags any exercise where the generator logic is broken or the reference solution is wrong — catching authoring errors before students ever see them.

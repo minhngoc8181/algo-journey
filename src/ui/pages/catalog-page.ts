@@ -202,7 +202,7 @@ function createFilterBar(route: ReturnType<typeof router.getCurrentRoute>): HTML
     id: 'filter-topic',
   });
   topicSelect.appendChild(el('option', { text: 'All Topics', attrs: { value: 'all' } }));
-  const topics: Topic[] = ['arrays', 'strings', 'loops', 'conditionals', 'recursion', 'searching', 'sorting', 'math', 'design', 'collections', 'linked-list', 'mono-stack'];
+  const topics: Topic[] = ['arrays', 'strings', 'loops', 'conditionals', 'recursion', 'searching', 'sorting', 'math', 'design', 'collections', 'linked-list', 'binary-tree', 'mono-stack'];
   for (const topic of topics) {
     topicSelect.appendChild(el('option', { text: capitalize(topic), attrs: { value: topic } }));
   }

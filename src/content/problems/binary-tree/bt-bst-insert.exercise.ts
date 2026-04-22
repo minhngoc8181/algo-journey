@@ -8,7 +8,7 @@ export default defineExercise({
   summary: 'Insert a value into a Binary Search Tree (BST).',
   topic: 'binary-tree',
   difficulty: 'easy',
-  tags: ['binary-tree', 'tree', 'bst', 'recursion', 'cse202'],
+  tags: ['bst', 'recursion', 'cse202'],
   estimatedMinutes: 20,
   order: 720,
   mode: 'function_implementation',
@@ -30,11 +30,11 @@ It is **guaranteed** that \`val\` does not exist in the original BST.
 
 The answer is verified by the **inorder traversal** of the returned tree (must be sorted and contain \`val\`).
 
-The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes before insertion is in [0, 10⁴].',
-    '-10⁸ ≤ Node.val ≤ 10⁸',
+    'The number of nodes before insertion is in [0, 10Ã¢ÂÂ´].',
+    '-10Ã¢ÂÂ¸ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂ¸',
     'val is guaranteed not to exist in the original BST.',
   ],
   examples: [
@@ -67,6 +67,7 @@ class Solution {
   },
 
   evaluation: {
+    timeLimitMs: 2000,
     comparator: 'exact_json',
     javaGenerator: {
       count: 5,

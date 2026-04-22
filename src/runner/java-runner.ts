@@ -193,10 +193,12 @@ export async function javaRun(
   }));
 
   const allPassed = testResults.every(t => t.status === 'passed');
+  const anyTle    = testResults.some(t => t.status === 'tle');
   const anyError  = testResults.some(t => t.status === 'error');
 
   let status: RunStatus;
-  if (allPassed)  status = 'accepted';
+  if (anyTle)    status = 'time_limit_exceeded';
+  else if (allPassed)  status = 'accepted';
   else if (anyError) status = 'runtime_error';
   else            status = 'wrong_answer';
 

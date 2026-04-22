@@ -1,7 +1,7 @@
 # ideas.md
 
-Ghi chú này dùng để làm rõ các hướng mở rộng sau V1.
-Mục tiêu là brainstorm và định hướng ưu tiên, chưa đi vào thiết kế chi tiết.
+Tài liệu này đóng vai trò là Lộ trình phát triển (Roadmap) và Nhật ký tính năng (Feature Tracker) cho nền tảng Algo Journey kể từ phiên bản V2.
+Nó không chỉ dành để brainstorm các tính năng mới mà còn ghi nhận chi tiết về thiết kế, mục tiêu tích hợp chương trình học (Curriculum), và các chuẩn mực kỹ thuật (Engineering Standards) như tính nhất quán của hệ thống PC Judge.
 
 ---
 
@@ -9,12 +9,12 @@ Mục tiêu là brainstorm và định hướng ưu tiên, chưa đi vào thiế
 
 | # | Tính năng | Trạng thái | Ghi chú |
 |---|-----------|------------|---------|
-| 1 | `_starter.java` cho OfflineJudge | ✅ **Hoàn thành** | Thêm vào `generate-pc-judge.ts`; mỗi folder có `_starter.java` sạch |
-| 2 | Thêm bài Graph và Tree cho CSE202 | 🔄 **Đang làm** | Binary Tree (8 bài) đã xong; Graph + nhiều topic còn lại nằm trong mục 11 |
+| 1 | `_starter.java` cho OfflineJudge | ✅ **Hoàn thành** | Đã tích hợp CLI test & template chuẩn |
+| 2 | Thêm bài Graph và Tree cho CSE202 | 🔄 **Đang làm** | Binary Tree (8 bài) đã xong toàn diện; Graph chờ thực hiện |
 | 3 | Hỗ trợ đa ngôn ngữ: JS và Python | ⬜ Chưa làm | — |
 | 4 | Hỗ trợ bài SQL / Database | ⬜ Chưa làm | Cần query runner riêng |
 | 5 | Hỗ trợ bài về Testing | ⬜ Chưa làm | — |
-| 6 | Cải thiện Loader / Runner | ⬜ Chưa làm | — |
+| 6 | Cải thiện Loader / Runner | ✅ **Hoàn thành** | Đảm bảo tính nhất quán (Consistency) và tạo thư viện Helper dùng chung |
 | 7 | Tách biệt content và code | ⬜ Chưa làm | — |
 | 8 | Cho xem solution sau đủ cố gắng | ✅ **Hoàn thành** | Nút 🔒 Solution; cấu hình `config.ts → solutionAccess` |
 | 9 | Download toàn bộ submissions | ✅ **Hoàn thành** | Nút 📥 Export → ZIP `.java` theo topic/problem/timestamp |
@@ -34,10 +34,15 @@ README.txt cũng được cập nhật để liệt kê file này.
 
 ---
 
-## 2. Thêm bài `Graph` và `Tree` cho CSE202
+## 2. Thêm bài `Graph` và `Tree` cho CSE202 🔄
 
-- CSE202 là môn học trong chương trình và có các giải thuật về graph và tree.
-- Nên bổ sung nhóm bài này để nội dung bám sát chương trình hơn.
+- CSE202 là môn học trong chương trình và có cấu trúc dữ liệu cơ bản về graph và tree.
+- Nên bổ sung nhóm bài này để nội dung bám sát chương trình giảng dạy hơn.
+
+**Đã thực hiện (Giai đoạn 1 - Binary Tree):**
+- Xây dựng hoàn chỉnh 8 bài luyện tập từ Traverse (Duyệt cây) đến thao tác trên BST (Binary Search Tree).
+- Tích hợp chuẩn thẻ phân loại (tags filter) hiển thị theo thứ bậc (bst > binary-tree > tree) để sinh viên dễ dàng lọc bài trên UI hoặc CLI thông qua lệnh \`npm run pc-judge:coverage -- "--tags=cse202"\`.
+- Tree Helper đã được module hoá và tiêm vào Test runner để đa dạng hóa hình thái test (ví dụ cây cực lớn với 65k Nodes chống tràn RAM/TLE).
 
 ---
 
@@ -62,10 +67,19 @@ README.txt cũng được cập nhật để liệt kê file này.
 
 ---
 
-## 6. Cải thiện Loader / Runner cho Web và PC Judge
+## 6. Nhất quán (Consistency) giữa Web và PC Judge
 
-- Nên cải thiện Loader / Runner cho cả Web và PC Judge.
-- Hướng chính là tách riêng phần sinh input, chạy chương trình và kiểm tra output.
+- **Mục tiêu**: Tạo ra PC Judge minh bạch, đảm bảo tính nhất quán cao nhất giữa trải nghiệm biên dịch/chấm điểm trên Web (TeaVM) và PC Local (JDK).
+- **Sự độc lập**: Các bài tập được sinh ra dưới dạng thư mục Java độc lập, cấu trúc rõ ràng. PC Judge không bị lệ thuộc vào mã nguồn nội bộ của công cụ sinh (\`harness-generator\`), bất kỳ ai cũng có thể giải phẫu hoặc thay đổi ruột file chấm test một cách tường minh.
+
+### 6.1. Chuẩn hóa Thư viện Java Helper (Tree, Node)
+
+- **Mục tiêu**: Tránh việc lặp lại định nghĩa class ở mọi nơi cho các cấu trúc dữ liệu cơ bản (\`TreeNode\`, \`ListNode\`...).
+- **Chiến lược**: Xây dựng một module Java helper dùng chung chuẩn mực được tiêm (inject) vào PC Judge khi sinh bài tập.
+- **Hỗ trợ sinh Test Đa dạng**: Cung cấp sẵn các thuật toán Helper để generate cấu trúc cây (Tree) nhiều hình thái phục vụ Stress Test hoặc Large-scale Test:
+  - Cây hoàn hảo (Perfect / Complete Binary Tree).
+  - Cây lệch cấu trúc (Trái hoàn toàn, Phải hoàn toàn, dạng danh sách liên kết thẳng).
+  - Cây Random với các biến thể giá trị khó, số lượng Node cực lớn phục vụ triệt để đoạt Performance (Time Limit / TLE).
 
 ---
 

@@ -3,14 +3,16 @@ import java.util.*;
 class Solution {
     List<Integer> postorder(TreeNode root) {
         List<Integer> result = new ArrayList<>();
-        postorderHelper(root, result);
+        if (root == null) return result;
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            TreeNode node = stack.pop();
+            result.add(node.val);
+            if (node.left  != null) stack.push(node.left);
+            if (node.right != null) stack.push(node.right);
+        }
+        Collections.reverse(result);
         return result;
-    }
-
-    private void postorderHelper(TreeNode node, List<Integer> result) {
-        if (node == null) return;
-        postorderHelper(node.left, result);
-        postorderHelper(node.right, result);
-        result.add(node.val);
     }
 }

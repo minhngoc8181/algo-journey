@@ -892,6 +892,7 @@ function getTestVerdict(test: TestResult): Verdict {
     case 'passed':  return { label: '✓ AC',  cssClass: 'test-case__status--passed'  };
     case 'failed':  return { label: '✗ WA',  cssClass: 'test-case__status--wa'      };
     case 'error':   return { label: '✗ RE',  cssClass: 'test-case__status--re'      };
+    case 'tle':     return { label: '⏱ TLE', cssClass: 'test-case__status--tle'     };
     case 'warning': return { label: '⚠ TRV', cssClass: 'test-case__status--warning' };
     default:        return { label: '?',     cssClass: 'test-case__status--failed'  };
   }

@@ -1,9 +1,11 @@
 /* ═══════════════════════════════════════════════════════════
    Output Parser
-   Parses structured TEST| / ERROR| lines from Runner.java stdout.
+   Parses structured TEST| / ERROR| / TLE| lines from Runner.java stdout.
    Protocol:
-     TEST|<name>|<pass>|<actual>|<expected>
+     TEST|<name>|<PASS|FAIL>|<actual>|<expected>[|<elapsed>ms]
      ERROR|<name>|<exception>
+     TLE|<name>|<elapsed>ms (limit: Xms)
+     AJ|<name>|<true|false>|<actual>|<expected>   (legacy stress tests)
      === DONE ===
    ═══════════════════════════════════════════════════════════ */
 
@@ -35,6 +37,21 @@ export function parseRunnerOutput(
     // New format sentinel
     if (line === '=== DONE ===' || line === '__AJ_DONE__') {
       done = true;
+      continue;
+    }
+
+    // ── TLE: Time Limit Exceeded per test ────────────────────────
+    if (line.startsWith('TLE|')) {
+      const parts = line.split('|');
+      const name = parts[1];
+      const elapsedInfo = parts.slice(2).join('|');
+      if (name) {
+        resultMap.set(name, {
+          name,
+          status: 'tle' as const,
+          message: `Time Limit Exceeded: ${elapsedInfo}`,
+        });
+      }
       continue;
     }
 
@@ -80,7 +97,9 @@ export function parseRunnerOutput(
       const passStr = parts[2];
       if (!name) continue;
 
-      const passed = passStr === 'true';
+      // Updated: TEST|name|PASS|actual|expected[|elapsed]
+      // Also legacy: TEST|name|true|actual|expected (pass = 'true')
+      const passed = passStr === 'true' || passStr === 'PASS';
       const payload = parts.slice(3).join('|');
       let actual = '';
       let expected = '';

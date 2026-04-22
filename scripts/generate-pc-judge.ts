@@ -265,6 +265,11 @@ function javaLit(v: unknown, t: string): string {
     if (!Array.isArray(v) || v.length === 0) return 'null';
     return `Runner.buildList(new int[]{${(v as number[]).map(n => Math.trunc(n)).join(', ')}})`;
   }
+  if (t === 'TreeNode') {
+    if (!Array.isArray(v) || v.length === 0) return 'null';
+    const elems = (v as (number | null)[]).map(e => e === null ? 'null' : String(Math.trunc(e as number)));
+    return `Runner.buildTree(new Integer[]{${elems.join(', ')}})`;
+  }
   if (t.endsWith('[]')) {
     const et = t.slice(0, -2).trim();
     return `new ${t}{${(v as unknown[]).map(e => javaLit(e, et)).join(', ')}}`;
@@ -353,15 +358,15 @@ function getInfra(title: string) {
     }
 `;
 
-  // Java saveResults() method. Java string literals that embed JSON keys use
-  // \" which in String.raw is written as \\" (backslash + escaped-quote).
+  // Java saveResults() method with TLE support
   const saveFn = String.raw`    /**
      * Write collected results to results.json.
      * Called at the end of main() after all tests have run.
      */
     static void saveResults(String exercise) {
         long passed = results.stream().filter(r -> "PASS".equals(r.get("status"))).count();
-        long failed = results.size() - passed;
+        long tle    = results.stream().filter(r -> "TLE" .equals(r.get("status"))).count();
+        long failed = results.size() - passed - tle;
 
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
@@ -370,16 +375,21 @@ function getInfra(title: string) {
         sb.append("  \"summary\": {\n");
         sb.append("    \"total\":   ").append(results.size()).append(",\n");
         sb.append("    \"passed\": ").append(passed).append(",\n");
+        sb.append("    \"tle\":    ").append(tle).append(",\n");
         sb.append("    \"failed\": ").append(failed).append("\n");
         sb.append("  },\n");
         sb.append("  \"results\": [\n");
         for (int i = 0; i < results.size(); i++) {
             Map<String, String> r = results.get(i);
             sb.append("    {\n");
-            sb.append("      \"name\":     ").append(js(r.get("name"))).append(",\n");
-            sb.append("      \"status\":   ").append(js(r.get("status"))).append(",\n");
+            sb.append("      \"name\":       ").append(js(r.get("name"))).append(",\n");
+            sb.append("      \"status\":     ").append(js(r.get("status"))).append(",\n");
+            if (r.get("elapsed_ms") != null)
+                sb.append("      \"elapsed_ms\": ").append(r.get("elapsed_ms")).append(",\n");
             if ("ERROR".equals(r.get("status"))) {
                 sb.append("      \"message\": ").append(js(r.get("message"))).append("\n");
+            } else if ("TLE".equals(r.get("status"))) {
+                sb.append("      \"message\": ").append(js("Time Limit Exceeded (>" + TIME_LIMIT_MS + "ms)")).append("\n");
             } else {
                 sb.append("      \"actual\":   ").append(js(r.get("actual"))).append(",\n");
                 sb.append("      \"expected\": ").append(js(r.get("expected"))).append("\n");
@@ -392,7 +402,7 @@ function getInfra(title: string) {
         try (java.io.PrintWriter pw = new java.io.PrintWriter(
                 new java.io.FileWriter("results.json"))) {
             pw.write(sb.toString());
-            System.out.println("Results saved \u2192 results.json  (" + passed + "/" + results.size() + " passed)");
+            System.out.println("Results saved \u2192 results.json  (" + passed + "/" + results.size() + " passed, TLE: " + tle + ")");
         } catch (java.io.IOException ex) {
             System.err.println("Could not write results.json: " + ex);
         }
@@ -415,6 +425,7 @@ function buildFunctionRunner(ex: Exercise, tests: TestCase[]): string {
   const { methodName, params, returnType } = sig;
   const className = ex.requiredStructure?.className ?? 'Solution';
   const needsLN = [returnType, ...params.map(p => p.type)].includes('ListNode');
+  const needsTN = [returnType, ...params.map(p => p.type)].includes('TreeNode');
   const infra = getInfra(ex.title);
 
 
@@ -424,9 +435,11 @@ function buildFunctionRunner(ex: Exercise, tests: TestCase[]): string {
     const args   = tc.args ?? [];
     const argLit = params.map((p, j) => javaLit(args[j], p.type)).join(', ');
     const expLit = javaLit(tc.expected, returnType);
-    // ListNode: compare via string representation (ListNode may not implement equals)
+    // ListNode/TreeNode: compare via string representation (may not implement equals)
     if (returnType === 'ListNode') {
       testCalls += `        runTest("${tc.name}", () -> Runner.listToString(s.${methodName}(${argLit})), Runner.listToString(${expLit}));\n`;
+    } else if (returnType === 'TreeNode') {
+      testCalls += `        runTest("${tc.name}", () -> Runner.treeToString(s.${methodName}(${argLit})), Runner.treeToString(${expLit}));\n`;
     } else {
       testCalls += `        runTest("${tc.name}", () -> s.${methodName}(${argLit}), ${expLit});\n`;
     }
@@ -463,6 +476,45 @@ ${genBody}
     }
 ` : '';
 
+  const tnHelpers = needsTN ? `
+    // ── TreeNode helpers ─────────────────────────────────────────────
+    /** Build a TreeNode tree from a level-order Integer[] array (null = absent node). */
+    public static TreeNode buildTree(Integer[] arr) {
+        if (arr == null || arr.length == 0 || arr[0] == null) return null;
+        TreeNode root = new TreeNode(arr[0]);
+        java.util.Queue<TreeNode> q = new java.util.LinkedList<>();
+        q.add(root);
+        int i = 1;
+        while (!q.isEmpty() && i < arr.length) {
+            TreeNode cur = q.poll();
+            if (i < arr.length && arr[i] != null) { cur.left  = new TreeNode(arr[i]); q.add(cur.left);  } i++;
+            if (i < arr.length && arr[i] != null) { cur.right = new TreeNode(arr[i]); q.add(cur.right); } i++;
+        }
+        return root;
+    }
+    /** Serialize a tree to level-order string for comparison. */
+    public static String treeToString(TreeNode root) {
+        if (root == null) return "[]";
+        StringBuilder sb = new StringBuilder("[");
+        java.util.Queue<TreeNode> q = new java.util.LinkedList<>();
+        q.add(root);
+        boolean first = true;
+        while (!q.isEmpty()) {
+            TreeNode cur = q.poll();
+            if (!first) sb.append(", "); first = false;
+            if (cur == null) { sb.append("null"); continue; }
+            sb.append(cur.val);
+            if (cur.left != null || cur.right != null || !q.isEmpty()) {
+                q.add(cur.left); q.add(cur.right);
+            }
+        }
+        // Trim trailing nulls
+        String s = sb.append("]").toString();
+        while (s.endsWith(", null]")) s = s.substring(0, s.length() - 7) + "]";
+        return s;
+    }
+` : '';
+
   const compileFiles = ['Runner.java', ex.starter.file, ...(ex.helperClasses ?? []).map(h => h.fileName)].join(' ');
 
   return `import java.util.*;
@@ -485,17 +537,25 @@ public class Runner {
     // I. Reporting infrastructure — single source of truth for output
     // ════════════════════════════════════════════════════════════════
 
-    // Accumulated results — populated by report() and reportError()
+    /** Time limit per test in milliseconds */
+    static final long TIME_LIMIT_MS = 2000L;
+
+    // Accumulated results — populated by report(), reportError(), reportTle()
     static final List<Map<String, String>> results = new ArrayList<>();
 
     /** Uniform test result: print to stdout AND collect for JSON */
     public static void report(String name, boolean pass, String actual, String expected) {
-        System.out.println("TEST|" + name + "|" + pass + "|" + actual + "|" + expected);
+        report(name, pass, actual, expected, -1);
+    }
+    public static void report(String name, boolean pass, String actual, String expected, long elapsedMs) {
+        String status = pass ? "PASS" : "FAIL";
+        System.out.println("TEST|" + name + "|" + status + "|" + actual + "|" + expected + (elapsedMs >= 0 ? "|" + elapsedMs + "ms" : ""));
         Map<String, String> r = new LinkedHashMap<>();
-        r.put("name",     name);
-        r.put("status",   pass ? "PASS" : "FAIL");
-        r.put("actual",   actual);
-        r.put("expected", expected);
+        r.put("name",       name);
+        r.put("status",     status);
+        r.put("actual",     actual);
+        r.put("expected",   expected);
+        if (elapsedMs >= 0) r.put("elapsed_ms", String.valueOf(elapsedMs));
         results.add(r);
     }
 
@@ -509,6 +569,15 @@ public class Runner {
         results.add(r);
     }
 
+    /** TLE output: time limit exceeded */
+    public static void reportTle(String name, long elapsedMs) {
+        System.out.println("TLE|" + name + "|" + elapsedMs + "ms (limit: " + TIME_LIMIT_MS + "ms)");
+        Map<String, String> r = new LinkedHashMap<>();
+        r.put("name",       name);
+        r.put("status",     "TLE");
+        r.put("elapsed_ms", String.valueOf(elapsedMs));
+        results.add(r);
+    }
 ${infra.jsFn}
 ${infra.saveFn}    /** Format any value for display (handles primitive arrays) */
     static String fmt(Object v) {
@@ -537,15 +606,34 @@ ${infra.saveFn}    /** Format any value for display (handles primitive arrays) *
     @FunctionalInterface
     interface Fn { Object run() throws Exception; }
 
+    // Shared executor — single thread, daemonized so it doesn't block JVM exit
+    static final java.util.concurrent.ExecutorService __exec =
+        java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r);
+            t.setDaemon(true);
+            return t;
+        });
+
     /**
-     * Executes fn(), compares the result with expected, and reports.
-     * This is the single evaluation entry point for ALL static tests.
+     * Executes fn() with a hard TIME_LIMIT_MS timeout.
+     * Reports PASS/FAIL/TLE/ERROR and writes to results list.
      */
     static void runTest(String name, Fn fn, Object expected) {
+        long start = System.currentTimeMillis();
+        java.util.concurrent.Future<Object> future = __exec.submit(() -> fn.run());
         try {
-            Object actual = fn.run();
-            report(name, eq(actual, expected), fmt(actual), fmt(expected));
-        } catch (Exception e) {
+            Object actual = future.get(TIME_LIMIT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+            long elapsed = System.currentTimeMillis() - start;
+            report(name, eq(actual, expected), fmt(actual), fmt(expected), elapsed);
+        } catch (java.util.concurrent.TimeoutException e) {
+            future.cancel(true);
+            long elapsed = System.currentTimeMillis() - start;
+            reportTle(name, elapsed);
+        } catch (java.util.concurrent.ExecutionException e) {
+            Throwable cause = e.getCause();
+            reportError(name, cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             reportError(name, e);
         }
     }
@@ -557,7 +645,7 @@ ${infra.saveFn}    /** Format any value for display (handles primitive arrays) *
     static void runStaticTests(${className} s) {
 ${testCalls}    }
 ${genMethod}
-${lnHelpers}
+${lnHelpers}${tnHelpers}
     // ════════════════════════════════════════════════════════════════
     // V. Entry point
     // ════════════════════════════════════════════════════════════════
@@ -565,7 +653,9 @@ ${lnHelpers}
     public static void main(String[] args) {
         ${className} s = new ${className}();
         runStaticTests(s);
-${genCall}${infra.saveCall}        System.out.println("=== DONE ===");
+${genCall}${infra.saveCall}        __exec.shutdownNow();
+        System.out.println("=== DONE ===");
+        System.exit(0);
     }
 }
 `;
@@ -847,12 +937,14 @@ Output: ${e.output}${e.explanation ? '\nGiải: ' + e.explanation : ''}`).join('
 
 // ─── Main process ─────────────────────────────────────────────────
 
+
 /** Build a grade.bat for Windows to compile and run easily */
 function buildGradeBat(ex: Exercise): string {
   const sf = ex.starter.file;
-  // Determine all java files that need compiling (Runner.java + student file + helpers)
   const helpers = (ex.helperClasses ?? []).map(h => h.fileName).join(' ');
   const compileFiles = `Runner.java ${sf}${helpers ? ' ' + helpers : ''}`;
+  const hasTree = (ex.helperClasses ?? []).some(h => h.fileName === 'TreeNode.java');
+  const javaRun = hasTree ? 'java -Xss64m Runner' : 'java Runner';
   return `@echo off
 echo === PC Judge: ${ex.title} ===
 echo.
@@ -865,15 +957,18 @@ if %errorlevel% neq 0 (
 )
 
 REM Run
-java Runner
+${javaRun}
 `;
 }
+
 
 /** Build a grade.sh for Unix/Mac */
 function buildGradeSh(ex: Exercise): string {
   const sf = ex.starter.file;
   const helpers = (ex.helperClasses ?? []).map(h => h.fileName).join(' ');
   const compileFiles = `Runner.java ${sf}${helpers ? ' ' + helpers : ''}`;
+  const hasTree = (ex.helperClasses ?? []).some(h => h.fileName === 'TreeNode.java');
+  const javaRun = hasTree ? 'java -Xss64m Runner' : 'java Runner';
   return `#!/bin/bash
 echo "=== PC Judge: ${ex.title} ==="
 echo
@@ -886,7 +981,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run
-java Runner
+${javaRun}
 `;
 }
 
@@ -960,7 +1055,9 @@ ${ex.starter.code}
     // Also emit a grade-ref.bat that uses the ref solution
     const sf = ex.starter.file;
     const helpers = (ex.helperClasses ?? []).map(h => h.fileName).join(' ');
-    const gradeRef = `@echo off\necho === Testing Reference Solution: ${ex.title} ===\necho.\ncopy _solution_ref.java ${sf} >nul\njavac Runner.java ${sf}${helpers ? ' ' + helpers : ''}\nif %errorlevel% neq 0 ( echo COMPILE ERROR & exit /b 1 )\njava Runner\n`;
+    const hasTree = (ex.helperClasses ?? []).some(h => h.fileName === 'TreeNode.java');
+    const javaRun = hasTree ? 'java -Xss64m Runner' : 'java Runner';
+    const gradeRef = `@echo off\necho === Testing Reference Solution: ${ex.title} ===\necho.\ncopy _solution_ref.java ${sf} >nul\njavac Runner.java ${sf}${helpers ? ' ' + helpers : ''}\nif %errorlevel% neq 0 ( echo COMPILE ERROR & exit /b 1 )\n${javaRun}\n`;
     fs.writeFileSync(path.join(outDir, 'grade-ref.bat'), gradeRef, 'utf8');
   }
 

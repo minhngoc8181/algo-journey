@@ -8,12 +8,12 @@ export default defineExercise({
   summary: 'Check if a binary tree is height-balanced.',
   topic: 'binary-tree',
   difficulty: 'easy',
-  tags: ['binary-tree', 'tree', 'recursion', 'dfs', 'cse202'],
+  tags: ['binary-tree', 'recursion', 'dfs', 'cse202'],
   estimatedMinutes: 20,
   order: 701,
   mode: 'function_implementation',
   hints: [
-    'A tree is balanced if: left subtree is balanced, right subtree is balanced, AND |height(left) - height(right)| ≤ 1.',
+    'A tree is balanced if: left subtree is balanced, right subtree is balanced, AND |height(left) - height(right)| Ã¢â€°Â¤ 1.',
     'Write a helper `int checkHeight(TreeNode node)` that returns the actual height if balanced, or -1 if not.',
     'If `checkHeight` returns -1 for either child, propagate -1 upward immediately.',
   ],
@@ -24,11 +24,11 @@ export default defineExercise({
 
 A binary tree is height-balanced if for **every node** in the tree, the height of its left and right subtrees differs by at most 1.
 
-The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes is in the range [0, 5000].',
-    '-10⁴ ≤ Node.val ≤ 10⁴',
+    'The number of nodes is in the range [0, 10Ã¢ÂÂµ].',
+    '-10Ã¢ÂÂ´ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂ´',
   ],
   examples: [
     {
@@ -63,9 +63,10 @@ class Solution {
   },
 
   evaluation: {
+    timeLimitMs: 2000,
     comparator: 'exact_json',
     javaGenerator: {
-      count: 5,
+      count: 7,
       seed: 20260422,
       namePrefix: 'stress-',
       visibility: 'hidden',
@@ -110,6 +111,37 @@ class Solution {
                 boolean actual = s.isBalanced(nodes[0]);
                 System.out.println("AJ|stress-" + i + "|" + (actual == expected) + "|" + actual + "|" + expected);
             } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }
+
+        // Large-scale test 1: right-chain of 50,000 nodes Ã¢â€ â€™ deeply unbalanced Ã¢â€ â€™ expected false
+        // This catches O(nÃ‚Â²) naive solutions (which call height() at every node)
+        {
+            int N = 50_000;
+            TreeNode chainRoot = new TreeNode(1);
+            TreeNode cur = chainRoot;
+            for (int k = 2; k <= N; k++) { cur.right = new TreeNode(k); cur = cur.right; }
+            boolean expected = false;
+            try {
+                boolean actual = s.isBalanced(chainRoot);
+                System.out.println("AJ|large-right-chain-50k|" + ((actual == expected)) + "|" + (String.valueOf(actual)) + "|" + (String.valueOf(expected)));
+            } catch (Exception e) { System.out.println("AJ_ERROR|large-right-chain-50k: " + (e)); }
+        }
+
+        // Large-scale test 2: complete binary tree H=17 (131,071 nodes) Ã¢â€ â€™ perfectly balanced Ã¢â€ â€™ expected true
+        {
+            int H = 17;
+            int total = (1 << H) - 1;
+            TreeNode[] nodes = new TreeNode[total];
+            for (int k = 0; k < total; k++) nodes[k] = new TreeNode(k + 1);
+            for (int k = 0; k < total; k++) {
+                if (2*k+1 < total) nodes[k].left  = nodes[2*k+1];
+                if (2*k+2 < total) nodes[k].right = nodes[2*k+2];
+            }
+            boolean expected = true;
+            try {
+                boolean actual = s.isBalanced(nodes[0]);
+                System.out.println("AJ|large-complete-h17|" + ((actual == expected)) + "|" + (String.valueOf(actual)) + "|" + (String.valueOf(expected)));
+            } catch (Exception e) { System.out.println("AJ_ERROR|large-complete-h17: " + (e)); }
         }`,
     },
   },

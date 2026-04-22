@@ -8,7 +8,7 @@ export default defineExercise({
   summary: 'Return the preorder (Root-Left-Right) traversal of a binary tree.',
   topic: 'binary-tree',
   difficulty: 'easy',
-  tags: ['binary-tree', 'tree', 'recursion', 'traversal', 'dfs', 'cse202'],
+  tags: ['binary-tree', 'traversal', 'dfs', 'cse202'],
   estimatedMinutes: 12,
   order: 703,
   mode: 'function_implementation',
@@ -21,13 +21,13 @@ export default defineExercise({
 
   statement: `Given the \`root\` of a binary tree, return the **preorder traversal** of its node values.
 
-Preorder traversal visits nodes in the order: **Root → Left → Right**.
+Preorder traversal visits nodes in the order: **Root Ã¢â€ â€™ Left Ã¢â€ â€™ Right**.
 
-The \`TreeNode\` class is provided by the platform — do **not** re-declare it.`,
+The \`TreeNode\` class is provided by the platform Ã¢â‚¬â€ do **not** re-declare it.`,
 
   constraints: [
-    'The number of nodes is in the range [0, 100].',
-    '-100 ≤ Node.val ≤ 100',
+    'The number of nodes is in the range [0, 10Ã¢ÂÂµ].',
+    '-10Ã¢ÂÂµ Ã¢â€°Â¤ Node.val Ã¢â€°Â¤ 10Ã¢ÂÂµ',
   ],
   examples: [
     {
@@ -63,9 +63,10 @@ class Solution {
   },
 
   evaluation: {
+    timeLimitMs: 2000,
     comparator: 'exact_json',
     javaGenerator: {
-      count: 5,
+      count: 7,
       seed: 20260424,
       namePrefix: 'stress-',
       visibility: 'hidden',
@@ -96,6 +97,46 @@ class Solution {
                 boolean pass = java.util.Objects.equals(actual, expected);
                 System.out.println("AJ|stress-" + i + "|" + pass + "|" + actual + "|" + expected);
             } catch (Exception e) { System.out.println("AJ_ERROR|stress-" + i + ": " + e); }
+        }
+
+        // Large-scale test 1: left-chain of 50,000 nodes Ã¢â€ â€™ preorder = [50000, 49999, ..., 1]
+        {
+            int N = 50_000;
+            TreeNode chainRoot = new TreeNode(N);
+            TreeNode cur = chainRoot;
+            for (int k = N - 1; k >= 1; k--) { cur.left = new TreeNode(k); cur = cur.left; }
+            java.util.List<Integer> expected = new java.util.ArrayList<>();
+            for (int k = N; k >= 1; k--) expected.add(k);
+            try {
+                java.util.List<Integer> actual = s.preorder(chainRoot);
+                boolean pass = java.util.Objects.equals(actual, expected);
+                System.out.println("AJ|large-left-chain-50k|" + (pass) + "|" + (String.valueOf(actual.size()) + " elements") + "|" + (String.valueOf(N) + " elements"));
+            } catch (Exception e) { System.out.println("AJ_ERROR|large-left-chain-50k: " + (e)); }
+        }
+
+        // Large-scale test 2: complete binary tree H=16 (65,535 nodes)
+        {
+            int H = 16;
+            int total = (1 << H) - 1;
+            TreeNode[] nodes = new TreeNode[total];
+            for (int k = 0; k < total; k++) nodes[k] = new TreeNode(k + 1);
+            for (int k = 0; k < total; k++) {
+                if (2*k+1 < total) nodes[k].left  = nodes[2*k+1];
+                if (2*k+2 < total) nodes[k].right = nodes[2*k+2];
+            }
+            java.util.List<Integer> expected = new java.util.ArrayList<>();
+            java.util.Deque<TreeNode> st = new java.util.ArrayDeque<>();
+            st.push(nodes[0]);
+            while (!st.isEmpty()) {
+                TreeNode cur2 = st.pop(); expected.add(cur2.val);
+                if (cur2.right != null) st.push(cur2.right);
+                if (cur2.left  != null) st.push(cur2.left);
+            }
+            try {
+                java.util.List<Integer> actual = s.preorder(nodes[0]);
+                boolean pass = java.util.Objects.equals(actual, expected);
+                System.out.println("AJ|large-complete-h16|" + (pass) + "|" + (String.valueOf(actual.size()) + " elements") + "|" + (String.valueOf(total) + " elements"));
+            } catch (Exception e) { System.out.println("AJ_ERROR|large-complete-h16: " + (e)); }
         }`,
 
     },

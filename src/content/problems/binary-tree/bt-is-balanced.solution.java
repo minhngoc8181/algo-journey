@@ -2,17 +2,32 @@ import java.util.*;
 
 class Solution {
     boolean isBalanced(TreeNode root) {
-        return checkHeight(root) != -1;
-    }
-
-    // Returns actual height if balanced, -1 if unbalanced
-    private int checkHeight(TreeNode node) {
-        if (node == null) return 0;
-        int left = checkHeight(node.left);
-        if (left == -1) return -1;
-        int right = checkHeight(node.right);
-        if (right == -1) return -1;
-        if (Math.abs(left - right) > 1) return -1;
-        return 1 + Math.max(left, right);
+        // Iterative post-order: track height in a map, detect imbalance early
+        if (root == null) return true;
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        Map<TreeNode, Integer> heights = new HashMap<>();
+        
+        TreeNode curr = root;
+        TreeNode lastVisited = null;
+        
+        while (!stack.isEmpty() || curr != null) {
+            if (curr != null) {
+                stack.push(curr);
+                curr = curr.left;
+            } else {
+                TreeNode peekNode = stack.peek();
+                if (peekNode.right != null && lastVisited != peekNode.right) {
+                    curr = peekNode.right;
+                } else {
+                    stack.pop();
+                    int leftH = heights.getOrDefault(peekNode.left, 0);
+                    int rightH = heights.getOrDefault(peekNode.right, 0);
+                    if (Math.abs(leftH - rightH) > 1) return false;
+                    heights.put(peekNode, 1 + Math.max(leftH, rightH));
+                    lastVisited = peekNode;
+                }
+            }
+        }
+        return true;
     }
 }

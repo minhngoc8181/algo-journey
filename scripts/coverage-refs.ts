@@ -13,6 +13,7 @@
  *   npm run pc-judge:coverage                  # tất cả bài
  *   npm run pc-judge:coverage coffee-decorator  # một bài
  *   npm run pc-judge:coverage slug1;slug2       # nhiều bài
+ *   npm run pc-judge:coverage --tags=cse202     # lọc bài theo module tag
  *
  * Output:
  *   out/pc-judge/4_report_coverage.json  — tổng hợp tất cả bài
@@ -113,8 +114,33 @@ function getProblems(targetSlugs: string[] = []): Problem[] {
     }
   }
 
-  if (targetSlugs.length > 0) {
-    problems = problems.filter(p => targetSlugs.includes(p.slug));
+  if (targetSlugs && targetSlugs.length > 0) {
+    if (targetSlugs[0].startsWith('--tags=')) {
+      const tagStr = targetSlugs[0].split('=')[1];
+      const tags = tagStr.split(',').map(t => t.trim());
+      
+      const probDirs = fs.readdirSync(path.join(__dirname, '../src/content/problems'), { withFileTypes: true });
+      const activeSlugs = new Set();
+      
+      for (const dir of probDirs) {
+          if (dir.isDirectory()) {
+              const fullDir = path.join(__dirname, '../src/content/problems', dir.name);
+              const files = fs.readdirSync(fullDir);
+              for (const file of files) {
+                  if (file.endsWith('.exercise.ts')) {
+                      const content = fs.readFileSync(path.join(fullDir, file), 'utf8');
+                      if (tags.some(t => content.includes(`'${t}'`) || content.includes(`"${t}"`))) {
+                          activeSlugs.add(file.replace('.exercise.ts', ''));
+                      }
+                  }
+              }
+          }
+      }
+      problems = problems.filter(p => activeSlugs.has(p.slug));
+      console.log(`Filtering by tags: ${tags.join(', ')} -> Found ${problems.length} problems`);
+    } else {
+      problems = problems.filter(p => targetSlugs.includes(p.slug));
+    }
   }
   return problems.sort((a, b) => a.slug.localeCompare(b.slug));
 }

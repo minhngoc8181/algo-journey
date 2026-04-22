@@ -263,6 +263,16 @@
   background: var(--color-warning-subtle);
 }
 
+.test-case__status--tle {
+  color: hsl(25, 95%, 45%);
+  background: hsl(25, 95%, 95%);
+}
+
+[data-theme="dark"] .test-case__status--tle {
+  color: hsl(25, 95%, 70%);
+  background: hsl(25, 40%, 18%);
+}
+
 .test-case__status--warning {
   color: hsl(38, 92%, 40%);
   background: hsl(38, 92%, 95%);

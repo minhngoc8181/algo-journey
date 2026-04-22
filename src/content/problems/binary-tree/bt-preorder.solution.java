@@ -3,14 +3,15 @@ import java.util.*;
 class Solution {
     List<Integer> preorder(TreeNode root) {
         List<Integer> result = new ArrayList<>();
-        preorderHelper(root, result);
+        if (root == null) return result;
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            TreeNode node = stack.pop();
+            result.add(node.val);
+            if (node.right != null) stack.push(node.right);
+            if (node.left  != null) stack.push(node.left);
+        }
         return result;
-    }
-
-    private void preorderHelper(TreeNode node, List<Integer> result) {
-        if (node == null) return;
-        result.add(node.val);
-        preorderHelper(node.left, result);
-        preorderHelper(node.right, result);
     }
 }

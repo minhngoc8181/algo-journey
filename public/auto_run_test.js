@@ -12,6 +12,8 @@
  *      auto_run_solution()     — loads solution for current page & submits
  *   4. await import('/auto_run_test.js?t=' + Date.now()).then(() => window.auto_run_test(true))
  *      await import('/auto_run_test.js?t=' + Date.now()).then(() => window.auto_run_solution())
+ *      auto_run_test('cse202')    // Lọc và chạy toàn bộ bài thi có thẻ cse202
+ *      auto_run_test('tree')      // Lọc các bài liên quan đến cấu trúc cây  
  * 
  * REQUIRES:  npm run dev  (Vite dev server)
  * The app exposes window.__algoDev automatically in dev mode.
@@ -95,12 +97,27 @@ function switchToResultTab() {
 
 // ── Main Runner ────────────────────────────────────────────
 
-window.auto_run_test = async function (onlyFailing = false) {
+window.auto_run_test = async function (onlyFailing = false, tagFilters = null) {
   console.clear();
-  console.log('%c🚀 auto_run_test starting…', 'color:#6ee7b7;font-size:14px;font-weight:bold');
+  let tags = tagFilters;
+  if (typeof onlyFailing === 'string') {
+    tags = onlyFailing;
+    onlyFailing = false;
+  }
+  
+  if (tags) {
+    console.log(`%c🚀 auto_run_test starting (filtered by tag: ${tags})…`, 'color:#6ee7b7;font-size:14px;font-weight:bold');
+  } else {
+    console.log('%c🚀 auto_run_test starting…', 'color:#6ee7b7;font-size:14px;font-weight:bold');
+  }
 
   const api = getApi();
-  const catalog = api.getCatalog();
+  let catalog = api.getCatalog();
+  
+  if (tags) {
+    const tagList = tags.split(',').map(s => s.trim());
+    catalog = catalog.filter(p => tagList.some(tag => (p.tags || []).includes(tag)));
+  }
 
   if (!catalog || catalog.length === 0) {
     console.error('❌ No problems found in catalog. Is the app fully loaded?');
@@ -206,12 +223,12 @@ window.auto_run_test = async function (onlyFailing = false) {
       // Extract trivial passes from window.__lastRunResult for solution run
       let trivialCount = 0;
       let suspiciousTestWarning = '';
+      let isAllBoolean = true;
       if (window.__lastRunResult && window.__lastRunResult.tests) {
         const tests = window.__lastRunResult.tests;
         const TRIVIAL_SENTINELS = new Set(['[]', '', 'null', '0', '-1', 'true', 'false']);
         
         const expectedCounts = new Map();
-        let isAllBoolean = true;
 
         for (const t of tests) {
           if (t.status === 'passed' && t.actualPreview === t.expectedPreview && TRIVIAL_SENTINELS.has(t.actualPreview?.trim())) {

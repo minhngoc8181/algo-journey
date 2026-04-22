@@ -96,10 +96,37 @@ function cleanResults() {
 // 3. Chạy đè reference code và xác thực 100% Pass
 function verifyRefs(targetSlugs: string[] = []) {
   let problems = getProblems();
+  
   if (targetSlugs && targetSlugs.length > 0) {
-    problems = problems.filter(p => targetSlugs.includes(p.slug));
+    if (targetSlugs[0].startsWith('--tags=')) {
+      const tagStr = targetSlugs[0].split('=')[1];
+      const tags = tagStr.split(',').map(t => t.trim());
+      
+      const probDirs = fs.readdirSync(path.join(__dirname, '../src/content/problems'), { withFileTypes: true });
+      const activeSlugs = new Set();
+      
+      for (const dir of probDirs) {
+          if (dir.isDirectory()) {
+              const fullDir = path.join(__dirname, '../src/content/problems', dir.name);
+              const files = fs.readdirSync(fullDir);
+              for (const file of files) {
+                  if (file.endsWith('.exercise.ts')) {
+                      const content = fs.readFileSync(path.join(fullDir, file), 'utf8');
+                      if (tags.some(t => content.includes(`'${t}'`) || content.includes(`"${t}"`))) {
+                          activeSlugs.add(file.replace('.exercise.ts', ''));
+                      }
+                  }
+              }
+          }
+      }
+      problems = problems.filter(p => activeSlugs.has(p.slug));
+      console.log(`Filtering by tags: ${tags.join(', ')} -> Found ${problems.length} problems`);
+    } else {
+      problems = problems.filter(p => targetSlugs.includes(p.slug));
+    }
+    
     if (problems.length === 0) {
-      console.log(`No problems matched the provided slugs: ${targetSlugs.join(', ')}`);
+      console.log(`No problems matched the provided filter: ${targetSlugs.join(', ')}`);
       return;
     }
   }
@@ -152,6 +179,7 @@ function verifyRefs(targetSlugs: string[] = []) {
         for (const res of resultJSON.results || []) {
           if (res.status === 'PASS') stats.passed++;
           else if (res.status === 'FAIL') stats.failed++;
+          else if (res.status === 'TLE')  { stats.failed++; stats.errors++; }  // TLE = failed
           else if (res.status === 'ERROR') stats.errors++;
           
           const exp = res.expected ? res.expected.toString().trim() : '';
@@ -191,7 +219,7 @@ function verifyRefs(targetSlugs: string[] = []) {
       if (status === 'SUCCESS') status = 'NO_JSON_GENERATED';
     }
     
-    if (status === '100%_CORRECT') report.perfect++;
+    if (status === '100%_CORRECT' || status === '100%_CORRECT_BUT_POOR_TESTS') report.perfect++;
     else report.failedOrCrashed++;
     
     if (status !== '100%_CORRECT' && status !== '100%_CORRECT_BUT_POOR_TESTS') {
@@ -223,5 +251,5 @@ else {
   console.log('\nCommands:');
   console.log('  run-starter   Chạy grade.bat (chạy Starter Code sinh viên) và in ra JSON báo cáo 1_report_starter.json');
   console.log('  clean         Xóa file .class và results.json trên toàn bộ các thư mục bài.');
-  console.log('  verify-refs [slugs]  Copy đè đáp án mẫu _solution_ref.java, chạy, và xác định PASS toàn bộ test case. Điền kèm danh sách (slug1;slug2) để test riêng.');
+  console.log('  verify-refs [slugs|--tags=T1,T2]  Copy đè đáp án mẫu _solution_ref.java, chạy, và xác định PASS toàn bộ test case. Điền kèm danh sách (slug1;slug2) hoặc --tags=cse202 để lọc test.');
 }
