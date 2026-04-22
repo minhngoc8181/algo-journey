@@ -1,6 +1,6 @@
 # Algo Journey
 
-> A hands-on programming practice platform for university courses — built for students who want instant feedback, and educators who want rigorous, AI-assisted assessment.
+> A hands-on programming practice platform for university courses — built to help students learn programming through fast feedback, reflection, and deliberate practice, and to help educators author high-quality exercises with AI-assisted but rigorously verified workflows.
 
 ---
 
@@ -10,13 +10,38 @@
 
 Students write, run, and get results immediately. No setup. No login. No waiting.
 
+The deeper goal is not just convenience. It is to support a more scientific way of learning programming: make an attempt, observe concrete feedback, inspect failure, refine the mental model, and try again. On the educator side, the same philosophy leads to a different requirement: exercises must be auditable, measurable, and strong enough that student progress is driven by real understanding rather than weak or misleading tests.
+
+The project is now evolving in two parallel directions:
+- **Student-side AI assistance** — prompt-based support through **Ask AI** on each problem and **AI Progress** on the catalog page, designed to strengthen reasoning, reflection, and self-correction
+- **Educator-side AI-assisted exercise authoring** — a structured content pipeline for drafting, verifying, and expanding exercises with AI support under instructor control
+
+---
+
+## Quick Start
+
+```bash
+npm install
+npm run dev
+```
+
+This starts the local app and authoring environment. Build the production bundle with:
+
+```bash
+npm run build
+```
+
 ---
 
 ## For Students
 
+The student experience is designed around deliberate practice. The goal is not to remove challenge; it is to make challenge more visible, more interpretable, and more productive.
+
 - **Write code, see results instantly** — browser-based Java execution with compile errors, runtime errors, and test output shown in real time
+- **Learn through guided thinking, not answer dumping** — use **Ask AI** to generate structured prompts for hints, debugging, explanation, or review, so support arrives in stages and still pushes students to reason, inspect their own code, test ideas, and discover the next step themselves
+- **Build metacognition, not just momentum** — use **AI Progress** to turn browser-stored solving history into a reflective prompt that helps students identify patterns, monitor strengths and weaknesses, and choose what to practice next with more intention
 - **Practice by topic and difficulty** — algorithms, data structures, OOP, Design Patterns, and more
-- **Learn at your own pace** — progress is tracked locally; pick up where you left off
+- **Learn at your own pace** — progress, drafts, and submission history are stored locally in the browser, so students can revisit attempts, compare outcomes, and pick up where they left off without an account system
 - **Familiar experience** — a clean, distraction-free interface similar to LeetCode or HackerRank
 
 ### Curriculum coverage
@@ -32,16 +57,59 @@ Students write, run, and get results immediately. No setup. No login. No waiting
 
 ## For Educators
 
-Algo Journey is more than a student-facing tool. It includes a full **instructor-side framework** for creating, verifying, and quality-controlling exercises — built with AI-assisted authoring in mind.
+Algo Journey is more than a student-facing tool. It includes a full **instructor-side framework** for creating, verifying, and quality-controlling exercises — built for educators who want assignments that genuinely reward understanding, expose misconceptions, and produce trustworthy feedback.
 
 ### AI-Assisted Exercise Authoring
+
+This is a core direction of the project, not a side feature. The role of AI here is deliberately constrained: it accelerates drafting and iteration, while correctness, auditability, and final approval remain with the instructor and are enforced through a deterministic verification pipeline.
+
+That constraint is part of the pedagogy. If the platform is meant to train students through meaningful feedback, then the exercises themselves must be well-designed, the reference solutions must be trustworthy, and the tests must be strong enough to distinguish shallow pattern-matching from genuine understanding.
 
 Each exercise is defined in a structured TypeScript schema (`.exercise.ts` + `.gen.ts` + `.solution.java`) that separates:
 - **Problem statement and constraints**
 - **Test case generation** (both static and randomized stress tests)
 - **Reference solution** for ground-truth validation
 
-This schema is designed to be drafted with AI assistance, then verified and committed by the instructor. The separation of concerns makes it easy to audit, update, and expand the exercise library systematically.
+This schema is designed to be drafted with AI assistance, then verified and committed by the instructor. The separation of concerns makes it easy to audit, update, and expand the exercise library systematically, while keeping the final artifact understandable to humans rather than opaque to them.
+
+In practice, that gives educators a repeatable workflow:
+- Draft or refine the problem statement with AI
+- Encode the exercise in a reviewable schema
+- Verify the reference solution and generated tests
+- Measure coverage and detect weak tests before publishing
+
+### Educator Commands
+
+The core educator workflow is available directly from the project root:
+
+```bash
+# Start the local authoring UI
+npm run dev
+
+# Validate the app still builds
+npm run build
+
+# Catch common exercise authoring mistakes
+npm run lint:exercises
+
+# Generate standalone Java packages for PC Judge
+npm run pc-judge:all
+npm run pc-judge <slug>
+
+# Verify reference solutions and generators
+npm run pc-judge:verify verify-refs
+npm run pc-judge:verify verify-refs "slug1;slug2"
+npm run pc-judge:verify -- verify-refs "--tags=cse202"
+
+# Clean generated runtime artifacts
+npm run pc-judge:verify clean
+
+# Measure JaCoCo coverage for the generated test suites
+npm run pc-judge:coverage
+npm run pc-judge:coverage -- "--tags=cse202"
+```
+
+For day-to-day authoring and verification, these commands are enough without needing to dig into the implementation details. Advanced catalog-maintenance utilities remain documented separately in `scripts/README.md`.
 
 ### PC Judge — Offline Grading Toolkit
 
@@ -56,7 +124,9 @@ Each package includes a test harness (`Runner.java`), a reference solution, and 
 
 ### Quality Control Pipeline
 
-A set of CLI tools keeps the exercise library honest. You can run these commands globally or filter them by slug or tags.
+A set of CLI tools keeps the exercise library honest. The commands above are the operational entry points; the value of this pipeline is that it turns exercise quality into something measurable instead of subjective.
+
+That matters because weak exercises do not just lower assessment quality; they also distort student learning. If tests are shallow, repetitive, or incomplete, students are rewarded for brittle tactics instead of robust reasoning. The pipeline exists to prevent that.
 
 ```bash
 # 1. Generate standalone Java packages for PC Judge
@@ -130,5 +200,7 @@ Key reports written to `out/pc-judge/`:
 ## Contributing
 
 If you care about programming education, open-source tooling, or AI-assisted curriculum design, this project is built to be easy to understand and extend.
+
+Contributions are especially valuable when they strengthen one of the project's two core bets: helping students learn through evidence, reflection, and iteration, or helping educators publish exercises whose quality can be inspected and defended.
 
 Contributions welcome — new exercises, new Design Pattern problems, UI improvements, or enhancements to the instructor toolchain.
